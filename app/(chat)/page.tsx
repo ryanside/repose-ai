@@ -3,165 +3,175 @@
 import { useChat, Message } from "@ai-sdk/react";
 import { useState } from "react";
 import { generateBranches } from "./actions";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { ArrowUp } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { tryCatch } from "@/lib/try-catch";
+
 
 export default function Chat() {
-  const [generatedBranches, setGeneratedBranches] = useState<string[] | null>(
-    null
-  );
+  const [submitted, setSubmitted] = useState(false);
+  const [generatedBranches, setGeneratedBranches] = useState<string[]>([]);
 
-  const { messages, input, handleInputChange, handleSubmit } = useChat({
+  const { messages, input, handleInputChange, append } = useChat({
     api: "/api/explore",
     onFinish: (message) => {
       handleGeneration(message);
     },
   });
 
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitted(true);
+    append({ role: "user", content: input });
+  };
+
   const handleGeneration = async (message: Message) => {
-    console.log("starting handleGeneration");
-    console.log(message);
 
     if (message.parts?.[0]?.type === "text") {
-      const { result } = await generateBranches({
-        messageContent: message.parts[0].text,
-      });
-      if (Array.isArray(result.branches)) {
-        setGeneratedBranches(result.branches);
-      } else {
-        console.error("Invalid response format from generateBranches");
-      }
-      console.log(result.branches);
-    } else {
-      console.error("First part of the message is not text.");
-    }
+      const { data, error } = await tryCatch(
+        generateBranches({
+          messageContent: message.parts[0].text,
+        })
+      );
 
-    console.log("finished handleGeneration");
+      if (error) {
+        console.error("Error generating branches:", error);
+        return;
+      }
+      setGeneratedBranches(data.result.branches);
+    }
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-zinc-900 dark:to-zinc-950">
-      <header className="py-6 px-4 border-b border-zinc-200 dark:border-zinc-800">
-        <h1 className="text-2xl font-bold text-center text-zinc-800 dark:text-zinc-100">
-          proof of concept v2 4/2/2025
-        </h1>
-      </header>
-
-      <main className="flex-1 overflow-y-auto p-4 md:p-6">
-        <div className="max-w-3xl mx-auto space-y-6 pb-24">
-          {messages.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-zinc-500 dark:text-zinc-400">
-                Start a conversation by typing a message below.
-              </p>
-            </div>
-          ) : (
-            messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[80%] px-4 py-3 rounded-2xl ${
-                    message.role === "user"
-                      ? "bg-blue-600 text-white rounded-tr-none"
-                      : "bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 rounded-tl-none"
-                  }`}
-                >
-                  {message.parts
-                    .filter((part) => part.type !== "source")
-                    .map((part, index) => {
-                      if (part.type === "text") {
-                        return (
-                          <div key={index} className="whitespace-pre-wrap">
-                            {part.text}
-                          </div>
-                        );
-                      }
-                      // Handle other part types if necessary
-                      return null;
-                    })}
-
-                  {message.parts.filter((part) => part.type === "source")
-                    .length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-zinc-300/30 dark:border-zinc-700/30 text-sm">
-                      <p className="font-medium mb-1">Sources:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {message.parts
-                          .filter((part) => part.type === "source")
-                          .map((part) => {
-                            // Add type check for source part
-                            if (part.type === "source") {
-                              return (
-                                <a
-                                  key={`source-${part.source.id}`}
-                                  href={part.source.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={`inline-flex items-center px-2 py-1 rounded text-xs ${
-                                    message.role === "user"
-                                      ? "bg-blue-700 hover:bg-blue-800"
-                                      : "bg-zinc-300 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-100 hover:bg-zinc-400 dark:hover:bg-zinc-600"
-                                  }`}
-                                >
-                                  {part.source.title ??
-                                    new URL(part.source.url).hostname}
-                                </a>
-                              );
-                            }
-                            return null;
-                          })}
-                      </div>
-                    </div>
-                  )}
+    <div className="flex flex-col min-h-full w-full overflow-x-hidden">
+      <SidebarTrigger className="absolute top-4 left-2 md:hidden" />
+      {!submitted ? (
+        <div className="flex flex-col flex-1 max-w-7xl w-full gap-8 items-center mx-auto mt-4 pt-12 px-4 xs:pl-8 xs:pr-14 md:pt-[25vh] lg:mt-6 2xl:pr-20 max-sm:!px-1">
+          <div className="mx-auto flex w-full flex-col items-center gap-7 max-md:pt-4 max-w-2xl">
+            <h1 className="text-4xl font-bold text-center font-lora">
+              lets explore it
+            </h1>
+          </div>
+          <div className="w-full max-w-2xl">
+            <form onSubmit={handleSubmit}>
+              <div className="relative flex flex-col w-full gap-4 ">
+                <div className="flex flex-col">
+                  <Textarea
+                    value={input}
+                    onChange={handleInputChange}
+                    placeholder="Enter your topic..."
+                    rows={4}
+                    className="min-h-[120px] resize-none rounded-2xl px-4 py-3 shadow-sm"
+                  />
+                </div>
+                <div className="absolute bottom-0 w-full flex justify-between items-center px-4 pb-3">
+                  <Select>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="gemini 2.0 flash" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-2">
+                      <SelectItem value="gemini-2.0-flash">
+                        gemini 2.0 flash
+                      </SelectItem>
+                      <SelectItem value="gemini-2.0-flash-lite">
+                        gemini 2.0 flash-lite
+                      </SelectItem>
+                      <SelectItem value="gemini-2.5-pro">
+                        gemini 2.5 pro
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="submit"
+                    variant="default"
+                    size="icon"
+                    className="rounded-lg bg-primary hover:bg-primary/90"
+                  >
+                    <ArrowUp className="size-5" />
+                  </Button>
                 </div>
               </div>
-            ))
-          )}
-          {/* Generated Content Display */}
-          <div className="max-w-3xl mx-auto mb-4 space-y-4">
-            {generatedBranches && (
-              <div className="p-3 bg-purple-100 dark:bg-purple-900/30 border border-purple-400 dark:border-purple-600 rounded-md">
-                <h3 className="font-semibold mb-1 text-purple-800 dark:text-purple-200">
-                  Generated Branches:
-                </h3>
-                <ul className="list-disc list-inside text-purple-700 dark:text-purple-300">
-                  {generatedBranches.map((branch, index) => (
-                    <li key={index}>{branch}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            </form>
           </div>
         </div>
-      </main>
+      ) : (
+        <div className="max-w-3xl mx-auto space-y-6 pb-24 px-4">
+          {messages.map((message) => (
+            <div key={message.id} className="space-y-4">
+              {message.role === "assistant" && (
+                <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+                  <span>AI Assistant</span>
+                </div>
+              )}
+              <div className="prose dark:prose-invert max-w-none">
+                {message.parts
+                  .filter((part) => part.type !== "source")
+                  .map((part, index) => {
+                    if (part.type === "text") {
+                      return (
+                        <div key={index} className="whitespace-pre-wrap">
+                          {part.text}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
 
-      <footer className="sticky bottom-0 bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 p-4">
-        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto mb-4">
-          <div className="relative">
-            <input
-              className="w-full p-4 pr-12 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-full shadow-sm placeholder-zinc-500 dark:placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              value={input}
-              placeholder="Type your message..."
-              onChange={handleInputChange}
-            />
-            <button
-              type="submit"
-              disabled={!input.trim()} // Disable submit if input is empty
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="w-5 h-5"
-              >
-                <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
-              </svg>
-            </button>
-          </div>
-        </form>
-      </footer>
+                {message.parts.filter((part) => part.type === "source").length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                    <p className="font-medium mb-2">Sources</p>
+                    <div className="flex flex-wrap gap-2">
+                      {message.parts
+                        .filter((part) => part.type === "source")
+                        .map((part) => {
+                          if (part.type === "source") {
+                            return (
+                              <a
+                                key={`source-${part.source.id}`}
+                                href={part.source.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                              >
+                                {part.source.title ?? new URL(part.source.url).hostname}
+                              </a>
+                            );
+                          }
+                          return null;
+                        })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          
+          {/* Generated Branches */}
+          {generatedBranches && (
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-transparent backdrop-blur-sm border-t border-border">
+              <div className="max-w-3xl mx-auto flex flex-wrap gap-2 justify-center">
+                {generatedBranches.map((branch, index) => (
+                  <button
+                    key={index}
+                    className="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition-colors"
+                  >
+                    {branch}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
