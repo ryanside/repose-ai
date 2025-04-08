@@ -1,7 +1,7 @@
 "use client";
 
 import { useChat, Message } from "@ai-sdk/react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { generateBranches } from "./actions";
 import {
   Select,
@@ -17,49 +17,24 @@ import { tryCatch } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Chat() {
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [topic, setTopic] = useState<string>("");
-  const [branches, setBranches] = useState<string[]>([]);
-
-  const { messages, input, handleInputChange, append, status } = useChat({
+  const lastMessageRef = useRef<HTMLDivElement>(null);
+  const { messages, input, handleInputChange, append } = useChat({
     api: "/api/explore",
-    onFinish: (message) => {
-      handleGeneration(message, topic);
-    },
   });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setTopic(input);
     append({ role: "user", content: input });
+    setTimeout(() => {
+      lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   };
 
-  const handleGeneration = async (message: Message, topic: string) => {
-    console.log(message);
-    if (message.parts?.[0]?.type === "text") {
-      setIsGenerating(true);
-      const { data, error } = await tryCatch(
-        generateBranches({
-          messageContent: message.parts[0].text,
-        })
-      );
-
-      if (error) {
-        console.error("Error generating branches:", error);
-        setIsGenerating(false);
-        return;
-      }
-
-      setBranches(data.result.branches);
-      setIsGenerating(false);
+  useEffect(() => {
+    if (messages.length > 0) {
+      lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  };
-
-  const handleNextInput = (branch: string) => {
-    setTopic(branch);
-    setIsGenerating(true);
-    append({ role: "user", content: branch });
-  };
+  }, [messages]);
 
   return (
     <div className="flex flex-col min-h-full w-full overflow-x-hidden">
@@ -113,69 +88,86 @@ export default function Chat() {
           </div>
         </div>
       ) : (
-        <div className="w-3xl mx-auto space-y-12 px-4 my-4">
-          <div className="p-4 rounded-2xl bg-accent/30 border border-accent/20 space-y-2 ml-48">
-            <h1 className="tracking-tight font-medium">Exploring</h1>
-            <p className="tracking-tight text-muted-foreground">{topic}</p>
-          </div>
-
-          {status === "submitted" ? (
-            <div className="flex flex-col space-y-3">
-              <Skeleton className="h-[180px] w-full rounded-xl" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-full" />
+        <div className="w-3xl mx-auto space-y-12 px-4 my-4 mb-[120px]">
+          {messages.map((message, index) => (
+            <div 
+              key={message.id} 
+              ref={index === messages.length - 1 ? lastMessageRef : undefined}
+              className={`${
+                index === messages.length - 1 
+                  ? "min-h-[calc(100vh-200px)] relative" 
+                  : ""
+              }`}
+            >
+              <div className={`${
+                message.role === "assistant" && index === messages.length - 1
+                  ? "absolute top-0 left-0 right-0"
+                  : ""
+              }`}>
+                {message.role === "user" ? "User: " : "AI: "}
+                {message.parts
+                  .filter((part) => part.type !== "source")
+                  .map((part, index) => {
+                    if (part.type === "text") {
+                      return <div key={index}>{part.text}</div>;
+                    }
+                  })}
+                {message.parts
+                  .filter((part) => part.type === "source")
+                  .map((part) => (
+                    <span key={`source-${part.source.id}`}>
+                      [
+                      <a href={part.source.url} target="_blank">
+                        {part.source.title ?? new URL(part.source.url).hostname}
+                      </a>
+                      ]
+                    </span>
+                  ))}
               </div>
             </div>
-          ) : (
-            messages
-              .filter((message) => message.role === "assistant")
-              .map((message) => (
-                <div key={message.id}>
-                  AI:{" "}
-                  {message.parts
-                    .filter((part) => part.type !== "source")
-                    .map((part, index) => {
-                      if (part.type === "text") {
-                        return <div key={index}>{part.text}</div>;
-                      }
-                    })}
-                  {message.parts
-                    .filter((part) => part.type === "source")
-                    .map((part) => (
-                      <span key={`source-${part.source.id}`}>
-                        [
-                        <a href={part.source.url} target="_blank">
-                          {part.source.title ??
-                            new URL(part.source.url).hostname}
-                        </a>
-                        ]
-                      </span>
-                    ))}
-                </div>
-              ))
-          )}
-          {/* Generated Branches */}
-          {isGenerating ? (
-            <div className="flex flex-col space-y-3">
-              {[1, 2, 3].map((_, index) => (
-                <Skeleton key={index} className="h-12 w-full rounded-xl" />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col space-y-3">
-              {branches.map((branch, index) => (
+          ))}
+          <form
+            onSubmit={handleSubmit}
+            className="fixed bottom-8 left-1/2 rounded-3xl -translate-x-1/2 w-full max-w-3xl backdrop-blur-sm"
+          >
+            <div className="relative flex flex-col w-full gap-4 ">
+              <div className="flex flex-col">
+                <Textarea
+                  value={input}
+                  onChange={handleInputChange}
+                  placeholder="Enter your topic..."
+                  rows={4}
+                  className="min-h-[75px] resize-none rounded-3xl px-4 py-3 shadow-sm font-medium tracking-wide"
+                />
+              </div>
+              <div className="absolute bottom-0 w-full flex justify-between items-center px-4 pb-3">
+                <Select>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="gemini 2.0 flash" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-2">
+                    <SelectItem value="gemini-2.0-flash">
+                      gemini 2.0 flash
+                    </SelectItem>
+                    <SelectItem value="gemini-2.0-flash-lite">
+                      gemini 2.0 flash-lite
+                    </SelectItem>
+                    <SelectItem value="gemini-2.5-pro">
+                      gemini 2.5 pro
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button
-                  key={index}
-                  variant="outline"
-                  className="cursor-pointer whitespace-normal text-left h-auto transition-none"
-                  onClick={() => handleNextInput(branch)}
+                  type="submit"
+                  variant="default"
+                  size="icon"
+                  className="rounded-lg bg-primary hover:bg-primary/90"
                 >
-                  {branch}
+                  <ArrowUp className="size-5" />
                 </Button>
-              ))}
+              </div>
             </div>
-          )}
+          </form>
         </div>
       )}
     </div>
