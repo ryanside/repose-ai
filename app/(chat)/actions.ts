@@ -1,7 +1,7 @@
 'use server';
 
 import { vertex } from "@ai-sdk/google-vertex";
-import { generateObject, generateText } from "ai";
+import { generateObject } from "ai";
 import { z } from "zod";
 
 export async function generateBranches({
@@ -17,6 +17,7 @@ export async function generateBranches({
       - the branch uses precise language to hint at interesting angles 
       - the branch encourages exploration of advanced, nuanced details related to the topic.
       - the branch should be in the form of a question
+      - one of the three branches should diverge from the others but still be in the field of the topic
       `,
     prompt: messageContent,
     schema: z.object({
