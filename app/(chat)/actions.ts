@@ -1,30 +1,35 @@
-'use server';
+"use server";
 
 import { vertex } from "@ai-sdk/google-vertex";
-import { generateObject } from "ai";
+import { generateId, generateObject } from "ai";
 import { z } from "zod";
 
-export async function generateBranches({
+export async function generateSuggestions({
   messageContent,
+  messageId,
 }: {
   messageContent: string;
+  messageId: string;
 }) {
   const { object: result } = await generateObject({
     model: vertex("gemini-2.0-flash-001"),
     system: `
-      - you will generate three distinct branches of learning based on the user's message
-      - the branch digs deeper into specific aspects of the topic 
-      - the branch uses precise language to hint at interesting angles 
-      - the branch encourages exploration of advanced, nuanced details related to the topic.
-      - the branch should be in the form of a question
-      - one of the three branches should diverge from the others but still be in the field of the topic
+      - you will generate three distinct suggestions to explore based on the user's message
+      - the suggestion digs deeper into specific aspects of the topic 
+      - the suggestion uses precise language to hint at interesting angles 
+      - the suggestion encourages exploration of advanced, nuanced details related to the topic.
+      - the suggestion should be in the form of a question
       `,
     prompt: messageContent,
-    schema: z.object({
-      branches: z.array(z.string()),
-    })
+    schema: z.array(z.string()),
   });
 
-  return { result };
-}
+  const suggestions = result.map((suggestion) => ({
+    id: generateId(),
+    messageId: messageId,
+    content: suggestion,
+    selected: false,
+  }));
 
+  return { suggestions };
+}
