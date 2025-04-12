@@ -20,12 +20,19 @@ import {
   addEdge,
   Background,
   BackgroundVariant,
+  Node,
+  Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+
+type CustomNode = Node<{ label: string }>;
+type CustomEdge = Edge;
 
 export default function Chat() {
   const id = generateUUID();
   const lastMessageRef = useRef<HTMLDivElement>(null);
+  const [nodes, setNodes, onNodesChange] = useNodesState<CustomNode>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<CustomEdge>([]);
   const { messages, input, handleInputChange, handleSubmit, append, setInput } =
     useChat({
       generateId: generateUUID,
@@ -36,10 +43,84 @@ export default function Chat() {
       },
     });
 
-  const messageToNodes = (message: Message) => {};
+  const messageToNodes = (message: Message) => {
+    console.log("starting messageToNodes");
+    // check if the message has suggestions
+    const suggestionsAnnotation = message.annotations?.find(
+      (annotation) =>
+        typeof annotation === "object" &&
+        annotation !== null &&
+        "suggestions" in annotation &&
+        typeof annotation.suggestions === "object" &&
+        annotation.suggestions !== null &&
+        "suggestions" in annotation.suggestions &&
+        Array.isArray(annotation.suggestions.suggestions)
+    );
+    const suggestionsData = (suggestionsAnnotation as any).suggestions
+      .suggestions as Array<{
+      id: string;
+      content: string;
+    }>;
 
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+    // if the message has a suggestion id, create fromSuggestionId
+    const fromSuggestionIdAnnotation = message.annotations?.find(
+      (annotation) =>
+        typeof annotation === "object" &&
+        annotation !== null &&
+        "fromSuggestionId" in annotation &&
+        typeof annotation.fromSuggestionId === "string"
+    );
+    console.log("fromSuggestionIdAnnotation", fromSuggestionIdAnnotation);
+    const fromSuggestionId = fromSuggestionIdAnnotation ? (fromSuggestionIdAnnotation as any).fromSuggestionId : undefined;
+
+    // Create a tree structure with the message as the root and suggestions as branches
+    const rootNode = {
+      id: message.id,
+      data: { label: message.content.substring(0, 50) + "..." },
+      position: { x: 0, y: 0 }, // Root node centered at the top
+    };
+    // Create suggestion nodes positioned in a fan-like pattern below the root
+    const suggestionNodes = suggestionsData.map((suggestion, index) => {
+      // Calculate positions to form a tree with 3 branches
+      const angle = -Math.PI / 4 + (index * Math.PI / 2); // Spread suggestions in a 90° arc
+      const distance = 150; // Distance from root node
+      return {
+        id: suggestion.id,
+        data: { label: suggestion.content },
+        position: {
+          x: 250 + Math.cos(angle) * distance, // Position relative to root
+          y: 150 + Math.sin(angle) * distance,
+        },
+      };
+    });
+    
+    // Create edges connecting the root node to each suggestion
+    const suggestionEdges = suggestionNodes.map((suggestionNode) => ({
+      id: `${rootNode.id}-${suggestionNode.id}`,
+      source: rootNode.id,
+      target: suggestionNode.id,
+    }));
+
+    // if the message has a suggestion id, create a edge from the suggestion to the message
+    if (fromSuggestionId) {
+      suggestionEdges.push({
+        id: `${fromSuggestionId}-${message.id}`,
+        source: fromSuggestionId,
+        target: message.id,
+      });
+    }
+
+    // Combine all nodes and edges
+    const newNodes = [rootNode, ...suggestionNodes];
+    const newEdges = [...suggestionEdges];
+    console.log("newNodes", newNodes);
+    console.log("newEdges", newEdges);
+
+    // Update both nodes and edges
+    setNodes((nodes) => [...nodes, ...newNodes]);
+    setEdges((edges) => [...edges, ...newEdges]);
+  };
+
 
   const submitUserMessage = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -132,7 +213,7 @@ export default function Chat() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-row ">
+        <div className="flex flex-row">
           <div className="flex-1 max-w-3xl mr-auto space-y-12 px-4 my-4 mb-[120px]">
             {messages.map((message, index) => (
               <div
@@ -193,12 +274,12 @@ export default function Chat() {
                         }>;
 
                         return (
-                          <div className="my-4 flex flex-wrap gap-2">
+                          <div className="my-4 mb-44 flex flex-wrap gap-2">
                             {suggestionsData.map((suggestion) => (
                               <Button
                                 key={suggestion.id}
-                                variant="outline"
-                                className="max-w-3xl h-auto whitespace-normal text-left cursor-pointer"
+                                variant="default"
+                                className="w-3xl h-auto whitespace-normal text-left cursor-pointer"
                                 onClick={() => {
                                   // Disable the button when clicked
                                   const button = document.getElementById(
@@ -268,7 +349,7 @@ export default function Chat() {
                     type="submit"
                     variant="default"
                     size="icon"
-                    className="rounded-lg bg-primary hover:bg-primary/90 cursor-pointer"
+                    className="rounded-lg  bg-primary hover:bg-primary/90 cursor-pointer"
                   >
                     <ArrowUp className="size-5" />
                   </Button>
@@ -283,8 +364,7 @@ export default function Chat() {
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               fitView
-            >
-            </ReactFlow>
+            ></ReactFlow>
           </div>
         </div>
       )}
