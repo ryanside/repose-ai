@@ -6,7 +6,7 @@ import { generateSuggestions } from "@/app/(chat)/actions";
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages, fromSuggestionId = undefined, id } = await req.json();
+  const { messages, fromSuggestionId = undefined } = await req.json();
   // last user message id to link to the suggestions 
   const lastUserMessageId = messages[messages.length - 1].id;
 

@@ -10,19 +10,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import {
-  ArrowUp,
-  ChevronLeft,
-  ChevronRight,
-  LayoutPanelLeft,
-} from "lucide-react";
+import { ArrowUp, LayoutPanelLeft } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { generateUUID } from "@/lib/utils";
 import {
   ReactFlow,
   useNodesState,
   useEdgesState,
-  addEdge,
   Background,
   BackgroundVariant,
   Node,
@@ -32,10 +26,7 @@ import "@xyflow/react/dist/style.css";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
@@ -44,6 +35,45 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import Dagre from "@dagrejs/dagre";
+
+const getLayoutedElements = (
+  nodes: CustomNode[],
+  edges: CustomEdge[],
+  options: { direction: string }
+) => {
+  const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+
+  // Set graph settings
+  g.setGraph({
+    rankdir: options.direction,
+  });
+
+  // Add nodes and edges to the graph
+  edges.forEach((edge) => g.setEdge(edge.source, edge.target));
+  nodes.forEach((node) =>
+    g.setNode(node.id, {
+      ...node,
+      width: node.measured?.width ?? 200,
+      height: node.measured?.height ?? 180,
+    })
+  );
+
+  Dagre.layout(g);
+
+  return {
+    nodes: nodes.map((node) => {
+      const position = g.node(node.id);
+      // We are shifting the dagre node position (anchor=center center) to the top left
+      // so it matches the React Flow node anchor point (top left).
+      const x = position.x - (node.measured?.width ?? 0) / 2;
+      const y = position.y - (node.measured?.height ?? 0) / 2;
+
+      return { ...node, position: { x, y } };
+    }),
+    edges,
+  };
+};
 
 type CustomNode = Node<{ label: string }>;
 type CustomEdge = Edge;
@@ -64,7 +94,6 @@ export default function Chat() {
     handleSubmit,
     append,
     setInput,
-    status,
   } = useChat({
     id,
     generateId: generateUUID,
@@ -88,8 +117,11 @@ export default function Chat() {
         "suggestions" in annotation.suggestions &&
         Array.isArray(annotation.suggestions.suggestions)
     );
-    const suggestionsData = (suggestionsAnnotation as any).suggestions
-      .suggestions as Array<{
+    const suggestionsData = (
+      suggestionsAnnotation as {
+        suggestions: { suggestions: { id: string; content: string }[] };
+      }
+    ).suggestions.suggestions as Array<{
       id: string;
       content: string;
     }>;
@@ -104,27 +136,21 @@ export default function Chat() {
     );
     console.log("fromSuggestionIdAnnotation", fromSuggestionIdAnnotation);
     const fromSuggestionId = fromSuggestionIdAnnotation
-      ? (fromSuggestionIdAnnotation as any).fromSuggestionId
+      ? (fromSuggestionIdAnnotation as { fromSuggestionId: string })
+          .fromSuggestionId
       : undefined;
 
-    // Create a tree structure with the message as the root and suggestions as branches
+    // create root and suggestions nodes
     const rootNode = {
       id: message.id,
       data: { label: message.content.substring(0, 50) + "..." },
-      position: { x: 0, y: 0 }, // Root node centered at the top
+      position: { x: 0, y: 0 },
     };
-    // Create suggestion nodes positioned in a fan-like pattern below the root
-    const suggestionNodes = suggestionsData.map((suggestion, index) => {
-      // Calculate positions to form a tree with 3 branches
-      const angle = -Math.PI / 4 + (index * Math.PI) / 2; // Spread suggestions in a 90° arc
-      const distance = 150; // Distance from root node
+    const suggestionNodes = suggestionsData.map((suggestion) => {
       return {
         id: suggestion.id,
         data: { label: suggestion.content },
-        position: {
-          x: 250 + Math.cos(angle) * distance, // Position relative to root
-          y: 150 + Math.sin(angle) * distance,
-        },
+        position: { x: 0, y: 0 },
       };
     });
 
@@ -150,9 +176,13 @@ export default function Chat() {
     console.log("newNodes", newNodes);
     console.log("newEdges", newEdges);
 
+    const layoutedElements = getLayoutedElements(newNodes, newEdges, {
+      direction: "TB",
+    });
+
     // Update both nodes and edges
-    setNodes((nodes) => [...nodes, ...newNodes]);
-    setEdges((edges) => [...edges, ...newEdges]);
+    setNodes((nodes) => [...nodes, ...layoutedElements.nodes]);
+    setEdges((edges) => [...edges, ...layoutedElements.edges]);
   };
 
   const submitUserMessage = (e: React.FormEvent<HTMLFormElement>) => {
@@ -195,7 +225,7 @@ export default function Chat() {
     <div className="flex flex-col h-screen w-full overflow-hidden">
       {messages.length === 0 ? (
         <div className="flex flex-col flex-1 max-w-7xl w-full gap-8 items-center mx-auto mt-4 pt-12 px-4 xs:pl-8 xs:pr-14 md:pt-[25vh] lg:mt-6 2xl:pr-20 max-sm:!px-1">
-          <div className="mx-auto flex w-full flex-col items-center gap-7 max-md:pt-4 max-w-2xl">
+          <div className="flex w-full flex-col items-center mx-auto gap-7 max-md:pt-4 max-w-2xl">
             <h1 className="text-4xl font-medium tracking-tight">
               🌌 lets{" "}
               <span className="text-primary dark:text-accent">explore</span> it
@@ -358,7 +388,11 @@ export default function Chat() {
 
                               if (suggestionsAnnotation) {
                                 const suggestionsData = (
-                                  suggestionsAnnotation as any
+                                  suggestionsAnnotation as {
+                                    suggestions: {
+                                      suggestions: { id: string; content: string }[];
+                                    };
+                                  }
                                 ).suggestions.suggestions as Array<{
                                   id: string;
                                   content: string;
@@ -463,7 +497,6 @@ export default function Chat() {
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     fitView
-                    className=""
                   >
                     <Background variant={BackgroundVariant.Dots} />
                   </ReactFlow>

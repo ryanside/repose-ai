@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit, Fira_Code, Playfair_Display } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 
