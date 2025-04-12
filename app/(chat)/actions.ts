@@ -22,6 +22,7 @@ export async function generateSuggestions({
       `,
     prompt: messageContent,
     schema: z.array(z.string()),
+    temperature: 0.5,
   });
 
   const suggestions = result.map((suggestion) => ({

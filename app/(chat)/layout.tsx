@@ -14,8 +14,7 @@ export default async function Layout({
     <>
       <SidebarProvider>
         <AppSidebar/>
-        <SidebarTrigger className="fixed top-3 left-2.5 z-50" />
-        <SidebarInset>{children}</SidebarInset>
+        <SidebarInset className="outline outline-primary/15">{children}</SidebarInset>
       </SidebarProvider>
     </>
   );
