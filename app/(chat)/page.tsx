@@ -57,16 +57,23 @@ export default function Chat() {
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState<CustomNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<CustomEdge>([]);
-  const { messages, input, handleInputChange, handleSubmit, append, setInput, status } =
-    useChat({
-      id,
-      generateId: generateUUID,
-      sendExtraMessageFields: true,
-      api: "/api/explore",
-      onFinish: (message) => {
-        messageToNodes(message);
-      },
-    });
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    append,
+    setInput,
+    status,
+  } = useChat({
+    id,
+    generateId: generateUUID,
+    sendExtraMessageFields: true,
+    api: "/api/explore",
+    onFinish: (message) => {
+      messageToNodes(message);
+    },
+  });
 
   const messageToNodes = (message: Message) => {
     console.log("starting messageToNodes");
@@ -189,8 +196,9 @@ export default function Chat() {
       {messages.length === 0 ? (
         <div className="flex flex-col flex-1 max-w-7xl w-full gap-8 items-center mx-auto mt-4 pt-12 px-4 xs:pl-8 xs:pr-14 md:pt-[25vh] lg:mt-6 2xl:pr-20 max-sm:!px-1">
           <div className="mx-auto flex w-full flex-col items-center gap-7 max-md:pt-4 max-w-2xl">
-            <h1 className="text-4xl font-medium tracking-tight font-mono">
-              🌌 lets <span className="text-primary">explore</span> it
+            <h1 className="text-4xl font-medium tracking-tight">
+              🌌 lets{" "}
+              <span className="text-primary dark:text-accent">explore</span> it
             </h1>
           </div>
           <div className="w-full max-w-2xl">
@@ -201,7 +209,7 @@ export default function Chat() {
                     value={input}
                     onChange={handleInputChange}
                     placeholder="Enter your topic..."
-                    className="min-h-[150px] resize-none rounded-3xl px-4 py-3 shadow-sm font-medium tracking-wide"
+                    className="min-h-[150px] resize-none rounded-2xl px-4 py-3 shadow-sm font-medium tracking-wide"
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
@@ -255,8 +263,11 @@ export default function Chat() {
               />
               <Breadcrumb>
                 <BreadcrumbList>
-                  <BreadcrumbItem className="tracking-tight font-semibold">
+                  <BreadcrumbItem>
+                    Exploring:{" "}
+                    <span className="tracking-tight font-semibold animate-pulse">
                       {messages[0].content}
+                    </span>
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
@@ -285,7 +296,7 @@ export default function Chat() {
                     mobileView === "chat" ? "block md:block" : "hidden md:block"
                   }`}
                 >
-                  <div className="w-3xl h-full mx-auto tracking-wide leading-relaxed pb-[200px]">
+                  <div className="w-3xl h-full mx-auto tracking-wide leading-relaxed pb-[180px]">
                     {messages.map((message, index) => (
                       <div
                         key={message.id}
@@ -354,14 +365,12 @@ export default function Chat() {
                                 }>;
 
                                 return (
-                                  <div 
-                                    className="my-4 flex flex-wrap gap-2"
-                                  >
+                                  <div className="my-4 flex flex-wrap gap-2">
                                     {suggestionsData.map((suggestion) => (
                                       <Button
                                         key={suggestion.id}
                                         variant="outline"
-                                        className="w-3xl h-auto whitespace-normal text-pretty cursor-pointer"
+                                        className="w-3xl h-auto whitespace-normal text-pretty cursor-pointer dark:hover:text-accent"
                                         onClick={() => {
                                           // Disable the button when clicked
                                           const button =
@@ -393,7 +402,7 @@ export default function Chat() {
                   </div>
                   <form
                     onSubmit={submitUserMessage}
-                    className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-3xl min-w-3xl bg-background/30 backdrop-blur-sm z-50"
+                    className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-2xl w-full max-w-xl lg:max-w-3xl bg-background/30 backdrop-blur-sm z-50"
                   >
                     <div className="relative flex flex-col gap-4 ">
                       <div className="flex flex-col">
@@ -409,7 +418,7 @@ export default function Chat() {
                               );
                             }
                           }}
-                          className="min-h-[100px] resize-none rounded-3xl px-4 py-3 shadow-sm font-medium tracking-wide"
+                          className="min-h-[100px] resize-none rounded-2xl px-4 py-3 shadow-sm font-medium tracking-wide"
                         />
                       </div>
                       <div className="absolute bottom-0 w-full flex justify-between items-center px-4 pb-3">
@@ -446,7 +455,7 @@ export default function Chat() {
               {/* flow view */}
               <ResizablePanel defaultSize={50}>
                 <div
-                  className={`h-full bg-gradient-to-br from-background from-50% to-primary/30 rounded-br-xl overflow-hidden block w-full`}
+                  className={`h-full bg-gradient-to-br from-background from-50% to-primary/30 md:rounded-br-xl overflow-hidden block w-full`}
                 >
                   <ReactFlow
                     nodes={nodes}

@@ -1,9 +1,9 @@
-import { AppSidebar } from "@/components/app-sidebar"
+import { AppSidebar } from "@/components/app-sidebar";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 export default async function Layout({
   children,
@@ -13,8 +13,10 @@ export default async function Layout({
   return (
     <>
       <SidebarProvider>
-        <AppSidebar/>
-        <SidebarInset className="outline outline-primary/15">{children}</SidebarInset>
+        <AppSidebar />
+        <SidebarInset className="outline outline-primary/15">
+          {children}
+        </SidebarInset>
       </SidebarProvider>
     </>
   );
