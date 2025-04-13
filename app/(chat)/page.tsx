@@ -36,6 +36,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import Dagre from "@dagrejs/dagre";
+import Markdown from "react-markdown";
 
 const getLayoutedElements = (
   nodes: CustomNode[],
@@ -352,7 +353,7 @@ export default function Chat() {
                                     key={index}
                                     className="whitespace-pre-wrap"
                                   >
-                                    {part.text}
+                                    <Markdown>{part.text}</Markdown>
                                   </div>
                                 );
                               }
