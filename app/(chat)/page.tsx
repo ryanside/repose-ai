@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/resizable";
 import Dagre from "@dagrejs/dagre";
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const getLayoutedElements = (
   nodes: CustomNode[],
@@ -88,22 +89,16 @@ export default function Chat() {
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState<CustomNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<CustomEdge>([]);
-  const {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    append,
-    setInput,
-  } = useChat({
-    id,
-    generateId: generateUUID,
-    sendExtraMessageFields: true,
-    api: "/api/explore",
-    onFinish: (message) => {
-      messageToNodes(message);
-    },
-  });
+  const { messages, input, handleInputChange, handleSubmit, append, setInput } =
+    useChat({
+      id,
+      generateId: generateUUID,
+      sendExtraMessageFields: true,
+      api: "/api/explore",
+      onFinish: (message) => {
+        messageToNodes(message);
+      },
+    });
 
   const messageToNodes = (message: Message) => {
     console.log("starting messageToNodes");
@@ -327,7 +322,7 @@ export default function Chat() {
                     mobileView === "chat" ? "block md:block" : "hidden md:block"
                   }`}
                 >
-                  <div className="w-3xl h-full mx-auto tracking-wide leading-relaxed pb-[180px]">
+                  <div className="w-3xl h-full mx-auto tracking-wide space-y-4 pb-[180px]">
                     {messages.map((message, index) => (
                       <div
                         key={message.id}
@@ -342,18 +337,17 @@ export default function Chat() {
                             : ""
                         }`}
                       >
-                        <div className="whitespace-normal w-full">
+                        <div className="whitespace-pre-wrap w-full">
                           {message.role === "user" ? "User: " : "AI: "}
                           {message.parts
                             .filter((part) => part.type !== "source")
                             .map((part, index) => {
                               if (part.type === "text") {
                                 return (
-                                  <div
-                                    key={index}
-                                    className="whitespace-pre-wrap"
-                                  >
-                                    <Markdown>{part.text}</Markdown>
+                                  <div key={index} className="">
+                                    <Markdown remarkPlugins={[remarkGfm]}>
+                                      {part.text}
+                                    </Markdown>
                                   </div>
                                 );
                               }
@@ -362,12 +356,12 @@ export default function Chat() {
                             .filter((part) => part.type === "source")
                             .map((part) => (
                               <span key={`source-${part.source.id}`}>
-                                [
                                 <a href={part.source.url} target="_blank">
-                                  {part.source.title ??
-                                    new URL(part.source.url).hostname}
+                                  <Markdown remarkPlugins={[remarkGfm]}>
+                                    {part.source.title ??
+                                      new URL(part.source.url).hostname}
+                                  </Markdown>
                                 </a>
-                                ]
                               </span>
                             ))}
                           <div key={message.id}>
@@ -391,7 +385,10 @@ export default function Chat() {
                                 const suggestionsData = (
                                   suggestionsAnnotation as {
                                     suggestions: {
-                                      suggestions: { id: string; content: string }[];
+                                      suggestions: {
+                                        id: string;
+                                        content: string;
+                                      }[];
                                     };
                                   }
                                 ).suggestions.suggestions as Array<{

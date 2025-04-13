@@ -1,5 +1,5 @@
 import { vertex } from "@ai-sdk/google-vertex";
-import { createDataStreamResponse, streamText } from "ai";
+import { createDataStreamResponse, smoothStream, streamText } from "ai";
 import { generateSuggestions } from "@/app/(chat)/actions";
 
 // Allow streaming responses up to 30 seconds
@@ -23,6 +23,7 @@ export async function POST(req: Request) {
             - stay up-to-date: focus on the newest insights and validated information available from the search results without relying on outdated or unverified data.
           `,
         messages,
+        experimental_transform: smoothStream(),
         temperature: 0.8,
         onFinish: async () => {
           const suggestions = await generateSuggestions({
