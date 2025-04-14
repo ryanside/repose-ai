@@ -13,7 +13,7 @@ export default async function Layout({
     <>
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset className="outline outline-primary/15">
+        <SidebarInset className="outline outline-border">
           {children}
         </SidebarInset>
       </SidebarProvider>

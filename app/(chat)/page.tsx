@@ -218,7 +218,7 @@ export default function Chat() {
   // }, [messages]);
 
   return (
-    <div className="flex flex-col h-screen w-full overflow-hidden">
+    <div className="flex flex-col h-full w-full overflow-hidden">
       {messages.length === 0 ? (
         <div className="flex flex-col flex-1 max-w-7xl w-full gap-8 items-center mx-auto mt-4 pt-12 px-4 xs:pl-8 xs:pr-14 md:pt-[25vh] lg:mt-6 2xl:pr-20 max-sm:!px-1">
           <div className="flex w-full flex-col items-center mx-auto gap-7 max-md:pt-4 max-w-2xl">

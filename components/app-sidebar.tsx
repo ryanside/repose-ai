@@ -25,7 +25,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 // This is sample data.
 const data = {
   user: {
@@ -157,10 +157,17 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const router = useRouter();
   return (
     <Sidebar variant="inset" collapsible="icon" {...props}>
       <SidebarHeader>
-        <Link href="/">
+        <button
+          className="cursor-pointer"
+          onClick={() => {
+            router.push("/");
+            router.refresh();
+          }}
+        >
           <svg
             width="34"
             height="34"
@@ -193,7 +200,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               fill="#FE00C7"
             />
           </svg>
-        </Link>
+        </button>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
