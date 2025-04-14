@@ -14,6 +14,7 @@ import {
   ReactFlow,
   Background,
   BackgroundVariant,
+  Controls,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import Dagre from "@dagrejs/dagre";
@@ -140,6 +141,8 @@ export default function ExploreChat({
       id: `${rootNode.id}-${suggestionNode.id}`,
       source: rootNode.id,
       target: suggestionNode.id,
+      label: "suggestion",
+      animated: true,
     }));
 
     // if the message has a suggestion id, create a edge from the suggestion to the message
@@ -148,6 +151,8 @@ export default function ExploreChat({
         id: `${fromSuggestionId}-${message.id}`,
         source: fromSuggestionId,
         target: message.id,
+        label: "branching...",
+        animated: false,
       });
     }
 
@@ -164,21 +169,19 @@ export default function ExploreChat({
     // Update both nodes and edges
     setNodes((nodes) => [...nodes, ...layoutedElements.nodes]);
     setEdges((edges) => [...edges, ...layoutedElements.edges]);
-  }, [setNodes, setEdges]);
+  }, [setEdges, setNodes]);
 
   const scrollToLastMessage = useCallback(() => {
     lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
+  }, [lastMessageRef]);
 
   const submitUserMessage = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       handleSubmit(e);
-      setTimeout(() => {
-        lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 50);
+      setTimeout(scrollToLastMessage, 50);
     },
-    [handleSubmit, lastMessageRef]
+    [handleSubmit, scrollToLastMessage]
   );
 
   const handleSuggestionClick = useCallback(
@@ -197,7 +200,7 @@ export default function ExploreChat({
       setInput(""); // Clear the main input field
       setTimeout(scrollToLastMessage, 50);
     },
-    [append, setInput, scrollToLastMessage]
+    [append, scrollToLastMessage, setInput]
   );
 
   const toggleView = useCallback(() => {
@@ -206,7 +209,7 @@ export default function ExploreChat({
 
   const firstMessageContent = useMemo(() => {
     return messages.length > 0 ? messages[0].content : "";
-  }, [messages[0]?.content]);
+  }, [messages]);
 
   // useEffect(() => {
   //   if (messages.length > 0) {
@@ -272,6 +275,7 @@ export default function ExploreChat({
                 onEdgesChange={onEdgesChange}
                 fitView
               >
+                <Controls position="top-left" />
                 <Background variant={BackgroundVariant.Dots} />
               </ReactFlow>
             </div>

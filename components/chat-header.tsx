@@ -23,7 +23,7 @@ function ChatHeader({
   mobileView: "chat" | "flow";
 }) {
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b justify-between px-4">
+    <header className="flex h-12 shrink-0 items-center gap-2 border-b justify-between px-4">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4 bg-red-200" />
@@ -31,7 +31,7 @@ function ChatHeader({
           <BreadcrumbList>
             <BreadcrumbItem className="max-w-[200px] sm:max-w-none overflow-hidden text-ellipsis whitespace-nowrap">
               Exploring:{" "}
-              <span className="tracking-tight font-semibold animate-pulse">
+              <span className="tracking-tight font-semibold">
                 {firstMessageContent.substring(0, 30)}
                 {firstMessageContent.length > 30 ? "..." : ""}
               </span>

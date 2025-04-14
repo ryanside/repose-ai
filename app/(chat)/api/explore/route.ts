@@ -19,6 +19,7 @@ export async function POST(req: Request) {
           - when provided with search results, your task is to:
             - synthesize information: combine key insights from multiple sources to construct a comprehensive answer that reflects current trends and the most recent context on the topic.
             - ground your response: ensure that every claim or detail in your answer is directly supported by the provided search results. If there is conflicting information, acknowledge discrepancies and note areas of uncertainty.
+            - cite sources: reference the sources or provide direct quotes to help the reader verify the information.
             - provide context and nuance: detail not only the core facts but also relevant background context, emerging trends, and nuances informed by recent developments.
             - stay up-to-date: focus on the newest insights and validated information available from the search results without relying on outdated or unverified data.
           `,

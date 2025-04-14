@@ -105,12 +105,12 @@ function ChatInput({
                 );
               }
             }}
-            className="min-h-[80px] sm:min-h-[100px] resize-none rounded-2xl px-3 sm:px-4 py-3 shadow-sm font-medium tracking-wide"
+            className="min-h-[100px] resize-none rounded-2xl px-3 sm:px-4 py-3 shadow-sm font-medium tracking-wide"
           />
         </div>
         <div className="absolute bottom-0 w-full flex justify-between items-center px-3 sm:px-4 pb-3">
           <Select>
-            <SelectTrigger className="w-[100px] sm:w-[180px]">
+            <SelectTrigger className="w-[150px] sm:w-[180px]">
               <SelectValue placeholder="gemini 2.0 flash" />
             </SelectTrigger>
             <SelectContent className="rounded-xl border-2">
