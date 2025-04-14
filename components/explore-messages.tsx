@@ -4,8 +4,11 @@ import { Message } from "@ai-sdk/react";
 import { Button } from "@/components/ui/button";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { memo } from "react";
 
-export default function ExploreMessages({
+export default memo(ExploreMessages);
+
+function ExploreMessages({
   messages,
   lastMessageRef,
   handleSuggestionClick,
@@ -15,23 +18,26 @@ export default function ExploreMessages({
   handleSuggestionClick: (content: string, fromSuggestionId: string) => void;
 }) {
   return (
-    <div className="w-3xl h-full mx-auto tracking-wide space-y-4 pb-[180px]">
+    <div className="w-full max-w-3xl h-full mx-auto tracking-wide space-y-4 p-3 sm:p-4 pb-[140px] sm:pb-[180px]">
       {messages.map((message, index) => (
         <div
           key={message.id}
           ref={index === messages.length - 1 ? lastMessageRef : undefined}
           className={`${
-            index === messages.length - 1 ? "min-h-[calc(100vh)] relative" : ""
+            index === messages.length - 1 ? "min-h-[calc(100vh)]" : ""
           }`}
+          style={{ viewTransitionName: `message-${message.id}` }}
         >
           <div className="whitespace-pre-wrap w-full">
-            {message.role === "user" ? "User: " : "AI: "}
-            {message.parts?.
-              filter((part) => part.type !== "source")
+            <div className="font-medium mb-1">
+              {message.role === "user" ? "You:" : "AI:"}
+            </div>
+            {message.parts
+              ?.filter((part) => part.type !== "source")
               .map((part, index) => {
                 if (part.type === "text") {
                   return (
-                    <div key={index} className="">
+                    <div key={index} className="text-sm sm:text-base">
                       <Markdown remarkPlugins={[remarkGfm]}>
                         {part.text}
                       </Markdown>
@@ -39,11 +45,18 @@ export default function ExploreMessages({
                   );
                 }
               })}
-            {message.parts?.
-              filter((part) => part.type === "source")
+            {message.parts
+              ?.filter((part) => part.type === "source")
               .map((part) => (
-                <span key={`source-${part.source.id}`}>
-                  <a href={part.source.url} target="_blank">
+                <span
+                  key={`source-${part.source.id}`}
+                  className="text-xs sm:text-sm"
+                >
+                  <a
+                    href={part.source.url}
+                    target="_blank"
+                    className="text-primary hover:underline"
+                  >
                     <Markdown remarkPlugins={[remarkGfm]}>
                       {part.source.title ?? new URL(part.source.url).hostname}
                     </Markdown>
@@ -79,12 +92,12 @@ export default function ExploreMessages({
                   }>;
 
                   return (
-                    <div className="my-4 flex flex-wrap gap-2">
+                    <div className="my-3 sm:my-4 flex flex-wrap gap-2">
                       {suggestionsData.map((suggestion) => (
                         <Button
                           key={suggestion.id}
                           variant="outline"
-                          className="w-3xl h-auto whitespace-normal text-pretty cursor-pointer dark:hover:text-accent"
+                          className="text-xs sm:text-sm max-w-full h-auto py-2 whitespace-normal text-pretty cursor-pointer dark:hover:text-accent"
                           onClick={() => {
                             // Disable the button when clicked
                             const button = document.getElementById(

@@ -4,7 +4,7 @@ import ExploreMessages from "./explore-messages";
 import ChatHeader from "./chat-header";
 import ChatInput from "./chat-input";
 import { Message, useChat } from "@ai-sdk/react";
-import { useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { generateUUID } from "@/lib/utils";
 import {
   useNodesState,
@@ -85,7 +85,7 @@ export default function ExploreChat({
       },
     });
 
-  const messageToNodes = (message: Message) => {
+  const messageToNodes = useCallback((message: Message) => {
     console.log("starting messageToNodes");
     // check if the message has suggestions
     const suggestionsAnnotation = message.annotations?.find(
@@ -164,37 +164,49 @@ export default function ExploreChat({
     // Update both nodes and edges
     setNodes((nodes) => [...nodes, ...layoutedElements.nodes]);
     setEdges((edges) => [...edges, ...layoutedElements.edges]);
-  };
+  }, [setNodes, setEdges]);
 
-  const submitUserMessage = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    handleSubmit(e);
-    setTimeout(() => {
-      lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 50);
-  };
+  const scrollToLastMessage = useCallback(() => {
+    lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
 
-  const handleSuggestionClick = (content: string, fromSuggestionId: string) => {
-    append(
-      {
-        role: "user",
-        content: content,
-      },
-      {
-        body: {
-          fromSuggestionId,
+  const submitUserMessage = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      handleSubmit(e);
+      setTimeout(() => {
+        lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 50);
+    },
+    [handleSubmit, lastMessageRef]
+  );
+
+  const handleSuggestionClick = useCallback(
+    (content: string, fromSuggestionId: string) => {
+      append(
+        {
+          role: "user",
+          content: content,
         },
-      }
-    );
-    setInput(""); // Clear the main input field
-    setTimeout(() => {
-      lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 50);
-  };
+        {
+          body: {
+            fromSuggestionId,
+          },
+        }
+      );
+      setInput(""); // Clear the main input field
+      setTimeout(scrollToLastMessage, 50);
+    },
+    [append, setInput, scrollToLastMessage]
+  );
 
-  const toggleView = () => {
-    setMobileView(mobileView === "chat" ? "flow" : "chat");
-  };
+  const toggleView = useCallback(() => {
+    setMobileView(prev => prev === "chat" ? "flow" : "chat");
+  }, []);
+
+  const firstMessageContent = useMemo(() => {
+    return messages.length > 0 ? messages[0].content : "";
+  }, [messages.length > 0 ? messages[0].content : ""]);
 
   // useEffect(() => {
   //   if (messages.length > 0) {
@@ -218,18 +230,19 @@ export default function ExploreChat({
   return (
     <>
       <ChatHeader
-        messages={messages}
+        firstMessageContent={firstMessageContent}
         toggleView={toggleView}
         mobileView={mobileView}
       />
-      <div className="flex flex-row flex-1 overflow-hidden">
-        <ResizablePanelGroup direction="horizontal">
-          <ResizablePanel defaultSize={50}>
-            <div
-              className={`flex flex-col mx-auto h-full w-full overflow-y-auto relative  ${
-                mobileView === "chat" ? "block md:block" : "hidden md:block"
-              }`}
-            >
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+        <ResizablePanelGroup direction="horizontal" className="w-full">
+          <ResizablePanel
+            defaultSize={50}
+            className={`${
+              mobileView === "chat" ? "flex" : "hidden md:flex"
+            } flex-col w-full`}
+          >
+            <div className="flex flex-col mx-auto h-full w-full overflow-y-auto relative">
               <ExploreMessages
                 messages={messages}
                 lastMessageRef={lastMessageRef}
@@ -243,12 +256,15 @@ export default function ExploreChat({
               />
             </div>
           </ResizablePanel>
-          <ResizableHandle withHandle />
+          <ResizableHandle withHandle className="hidden md:flex" />
           {/* flow view */}
-          <ResizablePanel defaultSize={50}>
-            <div
-              className={`h-full bg-gradient-to-br from-background from-50% to-primary/30 md:rounded-br-xl overflow-hidden block w-full`}
-            >
+          <ResizablePanel
+            defaultSize={50}
+            className={`${
+              mobileView === "flow" ? "flex" : "hidden md:flex"
+            } flex-col w-full`}
+          >
+            <div className="h-full bg-gradient-to-br from-background from-50% to-primary/30 md:rounded-br-xl overflow-hidden w-full">
               <ReactFlow
                 nodes={nodes}
                 edges={edges}

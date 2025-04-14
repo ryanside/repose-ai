@@ -2,47 +2,63 @@
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList } from "@/components/ui/breadcrumb";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import { LayoutPanelLeft } from "lucide-react";
-import { Message } from "@ai-sdk/react";
+import { LayoutPanelLeft, MessageSquare } from "lucide-react";
+import { memo } from "react";
 
-export default function ChatHeader({
-  messages,
+export default memo(ChatHeader);
+
+function ChatHeader({
+  firstMessageContent,
   toggleView,
   mobileView,
 }: {
-  messages: Message[];
+  firstMessageContent: string;
   toggleView: () => void;
   mobileView: "chat" | "flow";
 }) {
   return (
-    <header className="flex h-12 shrink-0 items-center gap-2 border-b justify-between">
-      <div className="flex items-center gap-2 px-4">
+    <header className="flex h-14 shrink-0 items-center gap-2 border-b justify-between px-4">
+      <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4 bg-red-200" />
         <Breadcrumb>
           <BreadcrumbList>
-            <BreadcrumbItem>
+            <BreadcrumbItem className="max-w-[200px] sm:max-w-none overflow-hidden text-ellipsis whitespace-nowrap">
               Exploring:{" "}
               <span className="tracking-tight font-semibold animate-pulse">
-                {messages[0].content}
+                {firstMessageContent.substring(0, 30)}
+                {firstMessageContent.length > 30 ? "..." : ""}
               </span>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <div className="pr-4">
+      <div className="flex items-center">
         <Button
-          variant="ghost"
-          size="icon"
+          variant={mobileView === "chat" ? "default" : "ghost"}
+          size="sm"
           onClick={toggleView}
-          className="md:hidden flex"
-          aria-label="Toggle view"
+          className="md:hidden flex items-center gap-1 mr-1"
+          aria-label="Chat View"
         >
-          <LayoutPanelLeft
-            className={mobileView === "chat" ? "" : "text-primary"}
-          />
+          <MessageSquare className="size-4" />
+          <span className="sr-only sm:not-sr-only">Chat</span>
+        </Button>
+        <Button
+          variant={mobileView === "flow" ? "default" : "ghost"}
+          size="sm"
+          onClick={toggleView}
+          className="md:hidden flex items-center gap-1"
+          aria-label="Flow View"
+        >
+          <LayoutPanelLeft className="size-4" />
+          <span className="sr-only sm:not-sr-only">Flow</span>
         </Button>
       </div>
     </header>

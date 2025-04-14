@@ -23,7 +23,6 @@ export async function POST(req: Request) {
             - stay up-to-date: focus on the newest insights and validated information available from the search results without relying on outdated or unverified data.
           `,
         messages,
-        experimental_transform: smoothStream(),
         temperature: 0.8,
         onFinish: async () => {
           const suggestions = await generateSuggestions({
