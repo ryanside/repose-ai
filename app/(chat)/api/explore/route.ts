@@ -1,5 +1,5 @@
 import { vertex } from "@ai-sdk/google-vertex";
-import { createDataStreamResponse, smoothStream, streamText } from "ai";
+import { createDataStreamResponse, streamText } from "ai";
 import { generateSuggestions } from "@/app/(chat)/actions";
 
 // Allow streaming responses up to 30 seconds

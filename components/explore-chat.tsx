@@ -206,7 +206,7 @@ export default function ExploreChat({
 
   const firstMessageContent = useMemo(() => {
     return messages.length > 0 ? messages[0].content : "";
-  }, [messages.length > 0 ? messages[0].content : ""]);
+  }, [messages[0]?.content]);
 
   // useEffect(() => {
   //   if (messages.length > 0) {
