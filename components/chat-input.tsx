@@ -1,14 +1,30 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowUp } from "lucide-react";
 
-export default function ChatInput({ onboarding = false, submitUserMessage, input, handleInputChange }: { onboarding: boolean, submitUserMessage: (e: React.FormEvent<HTMLFormElement>) => void, input: string, handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void }) {
+export default function ChatInput({
+  onboarding = false,
+  submitUserMessage,
+  input,
+  handleInputChange,
+}: {
+  onboarding: boolean;
+  submitUserMessage: (e: React.FormEvent<HTMLFormElement>) => void;
+  input: string;
+  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+}) {
   if (onboarding) {
     return (
-      <>
+      <div className="flex flex-col flex-1 max-w-7xl w-full gap-8 items-center mx-auto mt-4 pt-12 px-4 xs:pl-8 xs:pr-14 md:pt-[25vh] lg:mt-6 2xl:pr-20 max-sm:!px-1">
         <div className="flex w-full flex-col items-center mx-auto gap-7 max-md:pt-4 max-w-2xl">
           <h1 className="text-4xl font-medium tracking-tight">
             🌌 lets{" "}
@@ -63,7 +79,7 @@ export default function ChatInput({ onboarding = false, submitUserMessage, input
             </div>
           </form>
         </div>
-      </>
+      </div>
     );
   }
 

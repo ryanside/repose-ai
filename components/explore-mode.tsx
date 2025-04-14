@@ -3,9 +3,5 @@ import ExploreChat from "./explore-chat";
 
 export default function ExploreMode() {
   const id = generateUUID();
-  return (
-    <>
-      <ExploreChat id={id} key={id} initialMessages={[]} />
-    </>
-  );
+  return <ExploreChat id={id} key={id} initialMessages={[]} />;
 }

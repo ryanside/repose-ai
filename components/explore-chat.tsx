@@ -202,6 +202,19 @@ export default function ExploreChat({
   //   }
   // }, [messages]);
 
+  // if the messages is empty, show the onboarding chat input
+  if (messages.length === 0) {
+    return (
+      <ChatInput
+        onboarding={true}
+        submitUserMessage={submitUserMessage}
+        input={input}
+        handleInputChange={handleInputChange}
+      />
+    );
+  }
+
+  // if the messages is not empty, show the chat
   return (
     <>
       <ChatHeader
