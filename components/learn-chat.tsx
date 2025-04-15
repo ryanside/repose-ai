@@ -161,8 +161,6 @@ export default function LearnChat({
         <div className="flex flex-col mx-auto h-full w-full overflow-y-auto relative">
           <LearnMessages messages={messages} lastMessageRef={lastMessageRef} />
 
-          {/* Scroll indicator to show there's more content - REMOVED */}
-
           {/* Fixed position for the input at the bottom - ABSOLUTE CENTER */}
           <div
             style={{
