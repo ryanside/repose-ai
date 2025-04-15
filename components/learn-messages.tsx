@@ -107,7 +107,7 @@ function LearnMessages({
               </div>
 
               {/* Text Content */}
-              <div className="prose prose-sm sm:prose-base prose-p:my-2 prose-pre:my-3 prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-headings:my-3 dark:prose-invert">
+              <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none tracking-normal leading-tight space-y-2 [&>*]:my-1 [&>h1]:mt-4 [&>h2]:mt-3 [&>h3]:mt-2">
                 <Markdown remarkPlugins={[remarkGfm]}>
                   {message.role === "user" ? message.content : messageContent}
                 </Markdown>
