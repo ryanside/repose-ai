@@ -1,13 +1,14 @@
 "use client";
 
 import { Message } from "@ai-sdk/react";
-import { memo } from "react";
-import { ExternalLink, Link } from "lucide-react";
+import { memo, useState, useRef, useCallback } from "react";
+import { ExternalLink, Link, Youtube } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { parseCodeBlocksFromMessage } from "@/app/(chat)/parse-code-blocks";
 import CodeSandbox from "@/app/(chat)/code-sandbox";
 import YouTubeShorts from "@/app/(chat)/youtube-shorts";
+import { Button } from "@/components/ui/button";
 
 export default memo(LearnMessages);
 
@@ -18,8 +19,43 @@ function LearnMessages({
   messages: Message[];
   lastMessageRef: React.RefObject<HTMLDivElement | null>;
 }) {
+  // Track which messages have videos showing
+  const [activeVideoMessages, setActiveVideoMessages] = useState<Set<string>>(
+    new Set()
+  );
+
+  // Create refs for videos to scroll to
+  const videoRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  // Toggle video display and scroll to it when activated
+  const toggleVideoDisplay = useCallback(
+    (messageId: string) => {
+      const newActiveVideoMessages = new Set(activeVideoMessages);
+
+      if (newActiveVideoMessages.has(messageId)) {
+        newActiveVideoMessages.delete(messageId);
+      } else {
+        newActiveVideoMessages.add(messageId);
+
+        // Schedule scrolling to the video after it renders
+        setTimeout(() => {
+          const videoElement = videoRefs.current[messageId];
+          if (videoElement) {
+            videoElement.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+          }
+        }, 100);
+      }
+
+      setActiveVideoMessages(newActiveVideoMessages);
+    },
+    [activeVideoMessages]
+  );
+
   return (
-    <div className="w-full max-w-3xl h-full mx-auto tracking-wide space-y-8 p-3 sm:p-4 pb-32">
+    <div className="w-full max-w-3xl h-full mx-auto tracking-wide space-y-8 p-3 sm:p-4 pb-64">
       {messages.map((message, index) => {
         // Parse message content for code blocks
         let messageContent = "";
@@ -41,11 +77,14 @@ function LearnMessages({
           }
         }
 
+        const isVideoActive = activeVideoMessages.has(message.id);
+        const showVideoButton = message.role === "assistant" && index > 0;
+
         return (
           <div
             key={message.id}
             ref={index === messages.length - 1 ? lastMessageRef : undefined}
-            className={`bg-card p-4 sm:p-6 rounded-xl border shadow-sm ${
+            className={`bg-card p-4 sm:p-6 rounded-xl border shadow-sm pb-24 ${
               index === messages.length - 1 ? "min-h-[calc(100vh-280px)]" : ""
             }`}
           >
@@ -78,14 +117,48 @@ function LearnMessages({
                   />
                 ))}
 
-              {/* Add YouTube Short for assistant messages */}
-              {message.role === "assistant" &&
-                messages.length > 0 &&
-                index > 0 && (
-                  <div className="mt-8 mb-12">
-                    <YouTubeShorts topicQuery={messages[0].content} />
-                  </div>
-                )}
+              {/* YouTube Video Button */}
+              {showVideoButton && (
+                <div className="mt-6 flex justify-end">
+                  <Button
+                    variant={isVideoActive ? "default" : "outline"}
+                    className="gap-2"
+                    onClick={() => toggleVideoDisplay(message.id)}
+                  >
+                    <Youtube size={16} />
+                    {isVideoActive
+                      ? "Hide Video Example"
+                      : "Show Video Example"}
+                  </Button>
+                </div>
+              )}
+
+              {/* YouTube Video Content - Only shown when active */}
+              {showVideoButton && (
+                <div
+                  className={`${
+                    isVideoActive ? "mt-6 mb-6" : "mb-6 min-h-[100px]"
+                  }`}
+                >
+                  {isVideoActive && (
+                    <div
+                      ref={(el) => {
+                        if (el) {
+                          videoRefs.current[message.id] = el;
+                        }
+                      }}
+                    >
+                      <YouTubeShorts
+                        topicQuery={
+                          messages[0].content +
+                          " " +
+                          (codeBlocks.length > 0 ? codeBlocks[0].language : "")
+                        }
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Sources Section */}
               {message.parts?.some((part) => part.type === "source") && (
