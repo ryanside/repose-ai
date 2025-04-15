@@ -25,21 +25,30 @@ function ExploreMessages({
           key={message.id}
           ref={index === messages.length - 1 ? lastMessageRef : undefined}
           className={`${
-            index === messages.length - 1 ? "min-h-[calc(100vh)]  pb-[120px]" : ""
+            index === messages.length - 1
+              ? "min-h-[calc(100vh)]  pb-[120px]"
+              : ""
           }`}
         >
           <div className="whitespace-pre-wrap w-full">
             <div className="font-medium mb-1">
-              {message.role === "user" ? <span className="text-accent">You:</span> : <span className="text-primary">AI:</span>}
+              {message.role === "user" ? (
+                <span className="text-accent">You:</span>
+              ) : (
+                <span className="text-primary">AI:</span>
+              )}
             </div>
-            
+
             {/* Text Content */}
             {message.parts
               ?.filter((part) => part.type !== "source")
               .map((part, index) => {
                 if (part.type === "text") {
                   return (
-                    <div key={index} className="prose prose-sm sm:prose-base prose-p:my-1 prose-pre:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-1 dark:prose-invert">
+                    <div
+                      key={index}
+                      className="prose prose-sm sm:prose-base prose-p:my-1 prose-pre:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-1 dark:prose-invert"
+                    >
                       <Markdown remarkPlugins={[remarkGfm]}>
                         {part.text}
                       </Markdown>
@@ -47,20 +56,25 @@ function ExploreMessages({
                   );
                 }
               })}
-            
+
             {/* Sources Section */}
-            {message.parts?.some(part => part.type === "source") && (
+            {message.parts?.some((part) => part.type === "source") && (
               <div className="mb-4 mt-4">
                 <div className="flex items-center gap-2 text-sm font-medium mb-2">
                   <Link size={16} />
                   <span>Sources</span>
-                  <span className="text-muted-foreground bg-muted rounded-md px-1">{message.parts.filter((part) => part.type ==="source").length}</span>
+                  <span className="text-muted-foreground bg-muted rounded-md px-1">
+                    {
+                      message.parts.filter((part) => part.type === "source")
+                        .length
+                    }
+                  </span>
                 </div>
                 <div className="flex overflow-x-auto pb-2 gap-3 scrollbar-thin">
                   {message.parts
                     ?.filter((part) => part.type === "source")
                     .map((part) => (
-                      <a 
+                      <a
                         key={`source-${part.source.id}`}
                         href={part.source.url}
                         target="_blank"
@@ -69,8 +83,14 @@ function ExploreMessages({
                       >
                         <div className="flex justify-between items-start mb-1">
                           <div className="text-xs font-medium text-primary truncate max-w-[85%] group flex items-center gap-1">
-                            <span className="truncate">{part.source.title ?? new URL(part.source.url).hostname}</span>
-                            <ExternalLink size={12} className="flex-shrink-0 opacity-70" />
+                            <span className="truncate">
+                              {part.source.title ??
+                                new URL(part.source.url).hostname}
+                            </span>
+                            <ExternalLink
+                              size={12}
+                              className="flex-shrink-0 opacity-70"
+                            />
                           </div>
                         </div>
                         <div className="text-xs text-muted-foreground truncate">
