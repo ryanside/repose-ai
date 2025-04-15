@@ -161,11 +161,23 @@ export default function LearnChat({
         <div className="flex flex-col mx-auto h-full w-full overflow-y-auto relative">
           <LearnMessages messages={messages} lastMessageRef={lastMessageRef} />
 
-          {/* Fixed position for the input at the bottom */}
-          <div className="fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 w-[95%] sm:w-full max-w-xl lg:max-w-3xl z-50 flex flex-col gap-4">
-            {/* Continue Learning button */}
+          {/* Scroll indicator to show there's more content - REMOVED */}
+
+          {/* Fixed position for the input at the bottom - ABSOLUTE CENTER */}
+          <div
+            style={{
+              position: "fixed",
+              bottom: "24px",
+              left: "51.5%",
+              transform: "translateX(-50%)",
+              width: "95%",
+              maxWidth: "500px",
+            }}
+            className="z-50 flex flex-col gap-4"
+          >
+            {/* Continue Learning button - original styling */}
             <button
-              className="w-full py-4 rounded-xl bg-accent/30 hover:bg-accent/50 transition-all border border-accent/20"
+              className="w-full py-3 rounded-lg bg-accent/40 hover:bg-accent/60 transition-all shadow-sm"
               onClick={handleNextLesson}
               disabled={isGenerating}
             >
@@ -196,8 +208,6 @@ export default function LearnChat({
                 ))}
               </div>
             </div>
-
-            {/* Only show the input field, no search bar in learn mode */}
           </div>
         </div>
       </div>

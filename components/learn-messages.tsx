@@ -19,7 +19,7 @@ function LearnMessages({
   lastMessageRef: React.RefObject<HTMLDivElement | null>;
 }) {
   return (
-    <div className="w-full max-w-3xl h-full mx-auto tracking-wide space-y-8 p-3 sm:p-4 pb-[240px] sm:pb-[260px]">
+    <div className="w-full max-w-3xl h-full mx-auto tracking-wide space-y-8 p-3 sm:p-4 pb-32">
       {messages.map((message, index) => {
         // Parse message content for code blocks
         let messageContent = "";
@@ -82,7 +82,7 @@ function LearnMessages({
               {message.role === "assistant" &&
                 messages.length > 0 &&
                 index > 0 && (
-                  <div className="mt-8">
+                  <div className="mt-8 mb-12">
                     <YouTubeShorts topicQuery={messages[0].content} />
                   </div>
                 )}

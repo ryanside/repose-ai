@@ -101,25 +101,22 @@ export default function YouTubeShorts({ topicQuery }: YouTubeShortsProps) {
   if (!videoId) return null;
 
   return (
-    <div className="flex flex-col items-center my-6">
-      <div className="rounded-xl overflow-hidden shadow-lg border border-border max-w-[350px] w-full">
-        <iframe
-          src={`https://www.youtube.com/embed/${videoId}`}
-          className="w-full aspect-[9/16]"
-          style={{ height: "622px" }}
-          frameBorder="0"
-          allowFullScreen
-          title="YouTube Shorts"
-        ></iframe>
+    <div className="flex flex-col items-center my-6 mb-35">
+      <div className="rounded-xl overflow-hidden shadow-lg border border-border max-w-[350px] w-full relative">
+        {/* Set a fixed aspect ratio container */}
+        <div className="relative w-full pb-[177.8%]">
+          {" "}
+          {/* 16:9 aspect ratio */}
+          <iframe
+            src={`https://www.youtube.com/embed/${videoId}`}
+            className="absolute top-0 left-0 w-full h-full"
+            frameBorder="0"
+            allowFullScreen
+            title="YouTube Shorts"
+          ></iframe>
+        </div>
       </div>
-      <div className="w-full max-w-[350px] px-2">
-        <p className="text-xs text-muted-foreground mt-2">
-          Video: {videoTitle}
-        </p>
-        <p className="text-xs text-muted-foreground font-medium">
-          Search query: "{searchQueryUsed}"
-        </p>
-      </div>
+      <div className="w-full max-w-[350px] px-2"></div>
     </div>
   );
 }
