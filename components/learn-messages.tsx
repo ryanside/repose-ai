@@ -27,7 +27,7 @@ function LearnMessages({
   // Create refs for videos to scroll to
   const videoRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  // Toggle video display and scroll to it when activated
+  // Updated toggleVideoDisplay function with improved scrolling
   const toggleVideoDisplay = useCallback(
     (messageId: string) => {
       const newActiveVideoMessages = new Set(activeVideoMessages);
@@ -37,16 +37,24 @@ function LearnMessages({
       } else {
         newActiveVideoMessages.add(messageId);
 
-        // Schedule scrolling to the video after it renders
+        // Increase the delay to give more time for the video to render
+        // and use a more gradual scrolling behavior
         setTimeout(() => {
           const videoElement = videoRefs.current[messageId];
           if (videoElement) {
-            videoElement.scrollIntoView({
+            // Scroll to position video in center of viewport with smoother behavior
+            const rect = videoElement.getBoundingClientRect();
+            const scrollTop =
+              window.pageYOffset || document.documentElement.scrollTop;
+            const targetY =
+              rect.top + scrollTop - window.innerHeight / 2 + rect.height / 2;
+
+            window.scrollTo({
+              top: targetY,
               behavior: "smooth",
-              block: "center",
             });
           }
-        }, 100);
+        }, 300); // Increased from 100ms to 300ms for better rendering time
       }
 
       setActiveVideoMessages(newActiveVideoMessages);
@@ -55,14 +63,13 @@ function LearnMessages({
   );
 
   return (
-    <div className="w-full max-w-3xl h-full mx-auto tracking-wide space-y-8 p-3 sm:p-4 pb-64">
+    <div className="w-full max-w-3xl h-full mx-auto tracking-wide space-y-8 p-3 sm:p-4 pb-32">
       {messages.map((message, index) => {
         // Parse message content for code blocks
         let messageContent = "";
         let codeBlocks: Array<{
           language: string;
           code: string;
-          expectedOutput: string;
         }> = [];
 
         if (message.parts && message.parts.length > 0) {
@@ -84,7 +91,7 @@ function LearnMessages({
           <div
             key={message.id}
             ref={index === messages.length - 1 ? lastMessageRef : undefined}
-            className={`bg-card p-4 sm:p-6 rounded-xl border shadow-sm pb-24 ${
+            className={`bg-card p-4 sm:p-6 rounded-xl border shadow-sm pb-12 ${
               index === messages.length - 1 ? "min-h-[calc(100vh-280px)]" : ""
             }`}
           >
@@ -94,7 +101,7 @@ function LearnMessages({
                   <span className="text-accent">Question:</span>
                 ) : (
                   <span className="text-primary">
-                    Lesson {index / 2 + 0.5}:
+                    Lesson {Math.floor(index / 2) + 1}:
                   </span>
                 )}
               </div>
@@ -106,20 +113,25 @@ function LearnMessages({
                 </Markdown>
               </div>
 
-              {/* Code Blocks */}
+              {/* Code Blocks - Limited to 1-2 examples */}
               {message.role === "assistant" &&
-                codeBlocks.map((codeBlock, idx) => (
-                  <CodeSandbox
-                    key={`${message.id}-code-${idx}`}
-                    code={codeBlock.code}
-                    language={codeBlock.language}
-                    expectedOutput={codeBlock.expectedOutput}
-                  />
-                ))}
+                codeBlocks
+                  .slice(0, 2)
+                  .map((codeBlock, idx) => (
+                    <CodeSandbox
+                      key={`${message.id}-code-${idx}`}
+                      code={codeBlock.code}
+                      language={codeBlock.language}
+                    />
+                  ))}
 
               {/* YouTube Video Button */}
               {showVideoButton && (
-                <div className="mt-6 flex justify-end">
+                <div
+                  className={`mt-6 flex justify-end ${
+                    !isVideoActive ? "pb-32" : ""
+                  }`}
+                >
                   <Button
                     variant={isVideoActive ? "default" : "outline"}
                     className="gap-2"
@@ -136,9 +148,7 @@ function LearnMessages({
               {/* YouTube Video Content - Only shown when active */}
               {showVideoButton && (
                 <div
-                  className={`${
-                    isVideoActive ? "mt-6 mb-6" : "mb-6 min-h-[100px]"
-                  }`}
+                  className={`${isVideoActive ? "mt-6 mb-6" : "mb-6 min-h-0"}`}
                 >
                   {isVideoActive && (
                     <div

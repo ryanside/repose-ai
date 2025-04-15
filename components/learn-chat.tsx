@@ -168,7 +168,7 @@ export default function LearnChat({
             style={{
               position: "fixed",
               bottom: "24px",
-              left: "51.5%",
+              left: "51%",
               transform: "translateX(-50%)",
               width: "95%",
               maxWidth: "500px",

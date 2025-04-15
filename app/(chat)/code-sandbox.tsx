@@ -1,45 +1,44 @@
 "use client";
 
 import * as React from "react";
+import { Copy } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface CodeSandboxProps {
   code: string;
   language: string;
-  expectedOutput: string;
 }
 
-export default function CodeSandbox({
-  code,
-  language,
-  expectedOutput,
-}: CodeSandboxProps) {
+export default function CodeSandbox({ code, language }: CodeSandboxProps) {
+  const [copied, setCopied] = React.useState(false);
+
+  const copyToClipboard = async () => {
+    await navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="rounded-xl border border-border shadow-sm overflow-hidden my-4 bg-background">
+    <div className="rounded-xl border border-border shadow-sm overflow-hidden my-4 bg-slate-900 text-slate-50">
       {/* Header with Language */}
-      <div className="flex items-center p-3 bg-gray-100 text-gray-800">
+      <div className="flex items-center justify-between p-3 bg-slate-800 text-slate-200">
         <span className="font-medium text-sm capitalize">
-          {language} Code Example
+          {language} Example
         </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={copyToClipboard}
+          className="h-8 gap-1 text-slate-200 hover:text-white hover:bg-slate-700"
+        >
+          <Copy size={14} />
+          {copied ? "Copied!" : "Copy"}
+        </Button>
       </div>
 
-      {/* Code Display */}
-      <div className="flex flex-col md:flex-row">
-        {/* Code Section */}
-        <div className="md:w-1/2 bg-slate-900 text-slate-50">
-          <div className="p-4 font-mono text-sm overflow-auto">
-            <pre className="whitespace-pre-wrap">{code}</pre>
-          </div>
-        </div>
-
-        {/* Output Section */}
-        <div className="md:w-1/2 bg-slate-800 text-slate-50">
-          <div className="p-4 font-mono text-sm">
-            <div className="text-xs text-slate-400 mb-2">Output:</div>
-            <pre className="whitespace-pre-wrap text-slate-200">
-              {expectedOutput}
-            </pre>
-          </div>
-        </div>
+      {/* Code Section */}
+      <div className="p-4 font-mono text-sm overflow-auto max-h-[400px]">
+        <pre className="whitespace-pre-wrap">{code}</pre>
       </div>
     </div>
   );
