@@ -1,4 +1,4 @@
-import { vertex } from "@ai-sdk/google-vertex";
+import { google } from "@ai-sdk/google";
 import { createDataStreamResponse, streamText } from "ai";
 import { generateSuggestions } from "@/app/(chat)/actions";
 
@@ -7,13 +7,15 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
   const { messages, fromSuggestionId = undefined } = await req.json();
-  // last user message id to link to the suggestions 
+  // last user message id to link to the suggestions
   const lastUserMessageId = messages[messages.length - 1].id;
 
   return createDataStreamResponse({
     execute: (dataStream) => {
       const result = streamText({
-        model: vertex("gemini-2.0-flash-001", { useSearchGrounding: true }),
+        model: google("gemini-2.0-flash-001", {
+          useSearchGrounding: true,
+        }),
         system: `
         - you are a research assistant designed to generate rich, contextual, and up-to-date overviews using the latest search grounding sources.
           - when provided with search results, your task is to:
@@ -25,9 +27,9 @@ export async function POST(req: Request) {
           `,
         messages,
         temperature: 0.8,
-        onFinish: async () => {
+        onFinish: async (res) => {
           const suggestions = await generateSuggestions({
-            messageContent: messages[messages.length - 1].content,
+            messageContent: res.text,
             messageId: lastUserMessageId,
           });
 
