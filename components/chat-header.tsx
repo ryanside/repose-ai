@@ -1,7 +1,15 @@
 "use client";
 
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+} from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import { LayoutPanelLeft, MessageSquare } from "lucide-react";
 import { memo } from "react";
-import { BookOpen, Maximize2, Sparkles } from "lucide-react";
 
 export default memo(ChatHeader);
 
@@ -9,41 +17,50 @@ function ChatHeader({
   firstMessageContent,
   toggleView,
   mobileView,
-  mode = "explore",
 }: {
   firstMessageContent: string;
-  toggleView?: () => void;
-  mobileView?: "chat" | "flow";
-  mode?: "explore" | "learn";
+  toggleView: () => void;
+  mobileView: "chat" | "flow";
 }) {
   return (
-    <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-background/50 backdrop-blur-sm sticky top-0 z-10">
+    <header className="flex h-12 shrink-0 items-center gap-2 border-b justify-between px-4">
       <div className="flex items-center gap-2">
-        {mode === "explore" ? (
-          <Sparkles className="text-primary" size={18} />
-        ) : (
-          <BookOpen className="text-primary" size={18} />
-        )}
-        <h1 className="font-medium line-clamp-1 text-sm sm:text-base">
-          {firstMessageContent
-            ? firstMessageContent.substring(0, 60) +
-              (firstMessageContent.length > 60 ? "..." : "")
-            : "New Chat"}
-        </h1>
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-2 h-4 bg-red-200" />
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem className="max-w-[200px] sm:max-w-none overflow-hidden text-ellipsis whitespace-nowrap">
+              Exploring:{" "}
+              <span className="tracking-tight font-semibold">
+                {firstMessageContent.substring(0, 30)}
+                {firstMessageContent.length > 30 ? "..." : ""}
+              </span>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
       </div>
-
-      {/* Only show expand view button in explore mode */}
-      {mode === "explore" && toggleView && (
-        <button
+      <div className="flex items-center">
+        <Button
+          variant={mobileView === "chat" ? "default" : "ghost"}
+          size="sm"
           onClick={toggleView}
-          className="p-2 hover:bg-muted rounded-md text-muted-foreground md:hidden"
+          className="md:hidden flex items-center gap-1 mr-1"
+          aria-label="Chat View"
         >
-          <Maximize2 size={18} />
-          <span className="sr-only">
-            {mobileView === "chat" ? "View Flow" : "View Chat"}
-          </span>
-        </button>
-      )}
-    </div>
+          <MessageSquare className="size-4" />
+          <span className="sr-only sm:not-sr-only">Chat</span>
+        </Button>
+        <Button
+          variant={mobileView === "flow" ? "default" : "ghost"}
+          size="sm"
+          onClick={toggleView}
+          className="md:hidden flex items-center gap-1"
+          aria-label="Flow View"
+        >
+          <LayoutPanelLeft className="size-4" />
+          <span className="sr-only sm:not-sr-only">Flow</span>
+        </Button>
+      </div>
+    </header>
   );
 }
