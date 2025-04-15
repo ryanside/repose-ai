@@ -3,6 +3,8 @@
 import { google } from "@ai-sdk/google";
 import { generateId, generateObject } from "ai";
 import { z } from "zod";
+import { headers } from "next/headers"
+import { auth } from "../../lib/auth"
 
 export async function generateSuggestions({
   messageContent,
@@ -31,6 +33,13 @@ export async function generateSuggestions({
     content: suggestion,
     selected: false,
   }));
+
+  const someAuthenticatedAction = async () => {
+    "use server";
+    const session = await auth.api.getSession({
+        headers: await headers()
+    })
+};
 
   return { suggestions };
 }
