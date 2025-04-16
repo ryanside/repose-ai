@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   BadgeCheck,
   Bell,
@@ -7,6 +9,7 @@ import {
   CreditCard,
   LogOut,
   Sparkles,
+  User,
 } from "lucide-react"
 
 import {
@@ -29,17 +32,86 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { authClient } from "@/lib/auth-client"
+import { Button } from "@/components/ui/button"
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string
-    email: string
-    avatar: string
+interface User {
+  name: string
+  email: string
+  avatar: string
+}
+
+export function NavUser() {
+  const { isMobile, state } = useSidebar()
+  const router = useRouter()
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data, error } = await authClient.getSession()
+        if (data && !error) {
+          setUser({
+            name: data.user.name || "User",
+            email: data.user.email,
+            avatar: data.user.image || "https://ui-avatars.com/api/?name=" + encodeURIComponent(data.user.name || "User"),
+          })
+        }
+      } catch (err) {
+        console.error("Error checking session:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkSession()
+  }, [])
+
+  const handleLogout = async () => {
+    try {
+      await authClient.signOut()
+      setUser(null)
+      router.push("/login")
+    } catch (err) {
+      console.error("Error during logout:", err)
+    }
   }
-}) {
-  const { isMobile } = useSidebar()
+
+  if (loading) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg" variant="outline">
+            <div className="h-8 w-8 animate-pulse rounded-lg bg-muted" />
+            {state === "expanded" && (
+              <div className="grid flex-1 gap-1 text-left text-sm">
+                <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+                <div className="h-3 w-32 animate-pulse rounded bg-muted" />
+              </div>
+            )}
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    )
+  }
+
+  if (!user) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => router.push("/login")}
+          >
+            <User className="h-4 w-4" />
+            {state === "expanded" && <span className="ml-2">Sign In</span>}
+          </Button>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    )
+  }
 
   return (
     <SidebarMenu>
@@ -53,13 +125,19 @@ export function NavUser({
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarFallback className="rounded-lg">
+                  {user.name.charAt(0)}
+                </AvatarFallback>
               </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs">{user.email}</span>
-              </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              {state === "expanded" && (
+                <>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-medium">{user.name}</span>
+                    <span className="truncate text-xs">{user.email}</span>
+                  </div>
+                  <ChevronsUpDown className="ml-auto size-4" />
+                </>
+              )}
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -72,7 +150,9 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">
+                    {user.name.charAt(0)}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
@@ -103,7 +183,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Log out
             </DropdownMenuItem>

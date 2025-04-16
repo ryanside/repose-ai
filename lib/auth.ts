@@ -13,6 +13,12 @@ export const auth = betterAuth({
     emailAndPassword: { 
         enabled: true, 
     }, 
+    socialProviders: {
+        google: { 
+            clientId: process.env.GOOGLE_CLIENT_ID as string, 
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string, 
+        }, 
+    },
     plugins: [nextCookies()] // make sure this is the last plugin in the array
     // emailVerification: {
     //     sendVerificationEmail: async ( { user, url, token }, request) => {

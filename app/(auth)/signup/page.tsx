@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { NavUser } from "@/components/nav-user"
 import { authClient } from "../../../lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import Link from "next/link"
+import { Chrome } from "lucide-react"
 
 interface User {
   name: string;
@@ -18,150 +19,171 @@ export default function SignupPage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [formData, setFormData] = useState({
-    username: "",
+    name: "",
     email: "",
     password: "",
   })
   const [error, setError] = useState<string | null>(null)
 
-  // Uncomment this if you want to check for existing sessions
-  // useEffect(() => {
-  //   const checkSession = async () => {
-  //     try {
-  //       const { data, error } = await authClient.getSession()
-  //       if (data && !error) {
-  //         setUser({
-  //           name: data.user.name || "User",
-  //           email: data.user.email,
-  //           avatar: data.user.image || "https://ui-avatars.com/api/?name=" + encodeURIComponent(data.user.name || "User"),
-  //         })
-  //         router.push("/") // Redirect to home if already logged in
-  //       }
-  //     } catch (err) {
-  //       console.error("Error checking session:", err)
-  //     } finally {
-  //       setLoading(false)
-  //     }
-  //   }
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data, error } = await authClient.getSession()
+        if (data && !error) {
+          setUser({
+            name: data.user.name || "User",
+            email: data.user.email,
+            avatar: data.user.image || "https://ui-avatars.com/api/?name=" + encodeURIComponent(data.user.name || "User"),
+          })
+          router.push("/") // Redirect to home if already logged in
+        }
+      } catch (err) {
+        console.error("Error checking session:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  //   checkSession()
-  // }, [router])
+    checkSession()
+  }, [router])
 
-  // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Form data submitted:", formData)
-    
+    setError(null)
+
     try {
-      await authClient.signUp.email(
-        {
-          email: formData.email,
-          password: formData.password,
-          name: formData.username,
-        },
-        {
-          onSuccess: () => {
-            router.push("/");
-          },
-          onError: (ctx) => {
-            setError(ctx.error.message);
-          },
-        }
-      );
+      const { data, error } = await authClient.signUp.email({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        callbackURL: "/",
+      })
+
+      if (error) {
+        setError(error.message || "An error occurred during signup")
+        return
+      }
+
+      if (data) {
+        router.push("/") // Redirect to home after successful signup
+      }
     } catch (err) {
-      console.error("Error during signup:", err)
-      setError("An unexpected error occurred")
+      setError("An unexpected error occurred. Please try again.")
+      console.error("Signup error:", err)
     }
   }
 
-  // Uncomment this if you want to show a loading state
-  // if (loading) {
-  //   return <div>Loading...</div>
-  // }
+  const handleGoogleSignIn = async () => {
+    try {
+      const { data, error } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      })
+
+      if (error) {
+        setError(error.message || "An error occurred during Google sign in")
+        return
+      }
+
+      if (data) {
+        router.push("/") // Redirect to home after successful login
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.")
+      console.error("Google sign in error:", err)
+    }
+  }
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <div className="w-full max-w-md p-8 space-y-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold">Create an account</h1>
-          <p className="text-muted-foreground">Enter your details to get started</p>
-        </div>
-
-        {error && (
-          <div className="p-3 text-sm bg-red-100 border border-red-200 text-red-600 rounded">
-            {error}
+    <div className="flex min-h-screen">
+      <main className="flex-1 flex items-center justify-center">
+        <div className="w-full max-w-md p-8 space-y-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold">Create an account</h1>
+            <p className="text-muted-foreground">Sign up to get started</p>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-6">
-            <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-              <span className="bg-muted text-muted-foreground relative z-10 px-2">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label htmlFor="name" className="text-sm font-medium">Name</label>
+              <Input
+                id="name"
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium">Email</label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium">Password</label>
+              <Input
+                id="password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                required
+              />
+            </div>
+
+            {error && (
+              <div className="text-sm text-red-500">
+                {error}
+              </div>
+            )}
+
+            <Button type="submit" className="w-full">
+              Sign Up
+            </Button>
+          </form>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
                 Or continue with
               </span>
             </div>
-            <div className="grid gap-6">
-              <div className="grid gap-3">
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="shadow-none"
-                />
-              </div>
-              <div className="grid gap-3">
-                <Input
-                  id="username"
-                  name="username"
-                  type="text"
-                  placeholder="Username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  required
-                  className="shadow-none"
-                />
-              </div>
-              <div className="grid gap-3">
-                <div className="flex items-center">
-                </div>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className="shadow-none"
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                Sign up
-              </Button>
-            </div>
           </div>
-        </form>
 
-        <div className="text-center text-sm">
-          Already have an account?{" "}
-          <Link href="/login" className="text-blue-600 underline">
-            Log in
-          </Link>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleGoogleSignIn}
+          >
+            <Chrome className="mr-2 h-4 w-4" />
+            Continue with Google
+          </Button>
+
+          <div className="text-center text-sm">
+            Already have an account?{" "}
+            <Button
+              variant="link"
+              className="p-0"
+              onClick={() => router.push("/login")}
+            >
+              Sign in
+            </Button>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }
