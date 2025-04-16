@@ -21,6 +21,7 @@ import Dagre from "@dagrejs/dagre";
 import { ResizableHandle } from "./ui/resizable";
 import { ResizablePanelGroup } from "./ui/resizable";
 import { ResizablePanel } from "./ui/resizable";
+import { User } from "better-auth";
 
 // Layout function for organizing the graph nodes
 const getLayoutedElements = (
@@ -69,12 +70,14 @@ export default function ExploreChat({
   initialMessages,
   initialNodes = [],
   initialEdges = [],
+  user,
   modeHandler,
 }: {
   id: string;
   initialMessages: Message[];
   initialNodes?: CustomNode[];
   initialEdges?: CustomEdge[];
+  user?: User;
   modeHandler?: (mode: "explore" | "learn") => void;
 }) {
   const [mobileView, setMobileView] = useState<"chat" | "flow">("chat");
@@ -188,11 +191,13 @@ export default function ExploreChat({
   const submitUserMessage = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      window.history.replaceState({}, "", `/explore/${id}`);
+      if (user && messages.length === 0) {
+        window.history.replaceState({}, "", `/explore/${id}`);
+      }
       handleSubmit(e);
       setTimeout(scrollToLastMessage, 50);
     },
-    [handleSubmit, scrollToLastMessage, id]
+    [handleSubmit, scrollToLastMessage, id, messages.length, user]
   );
 
   const handleSuggestionClick = useCallback(

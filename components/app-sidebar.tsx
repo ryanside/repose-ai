@@ -268,7 +268,7 @@ export function AppSidebar({
 
       <SidebarFooter>
         <ThemeToggle />
-        <NavUser user={user || sampleData.user} />
+        <NavUser user={user} />
       </SidebarFooter>
 
       <SidebarRail />
