@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
+import Providers from "@/components/Providers";
 import { ThemeProvider } from "@/components/theme-provider";
-import { AppProvider } from "@/lib/app-context"; // Add this import
+import { AppProvider } from "@/lib/app-context";
 
 const outfit = Outfit({
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "unnamed-ai-app",
-  description: "an unnamed ai app",
+  title: "Repose AI",
+  description: "a cool way to explore the web",
 };
 
 export default function RootLayout({
@@ -28,8 +29,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AppProvider>
-            {/* Wrap children with AppProvider */}
-            {children}
+            <Providers>{children}</Providers>
           </AppProvider>
         </ThemeProvider>
       </body>

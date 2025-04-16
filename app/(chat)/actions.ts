@@ -1,9 +1,14 @@
 "use server";
 
+import { getChatsByUserId } from "@/lib/db/queries";
+import { generateUUID } from "@/lib/utils";
 import { google } from "@ai-sdk/google";
-import { generateId, generateObject } from "ai";
+import { generateObject, generateId } from "ai";
 import { z } from "zod";
 
+/**
+ * Generates suggestion options based on the AI's response
+ */
 export async function generateSuggestions({
   messageContent,
   messageId,
@@ -22,11 +27,12 @@ export async function generateSuggestions({
       `,
     prompt: messageContent,
     schema: z.array(z.string()),
-    temperature: 0.5,
+    temperature: 0.7, // Compromise between 0.5 and 0.8
   });
 
+  // Use generateUUID instead of generateId for consistency with the rest of the app
   const suggestions = result.map((suggestion) => ({
-    id: generateId(),
+    id: generateUUID(),
     messageId: messageId,
     content: suggestion,
     selected: false,
@@ -34,3 +40,14 @@ export async function generateSuggestions({
 
   return { suggestions };
 }
+
+/**
+ * Gets the chat history for a user
+ */
+export const getHistoryByUserId = async (userId: string) => {
+  if (!userId) {
+    return { error: "User ID is required" };
+  }
+  const history = await getChatsByUserId({ id: userId });
+  return history;
+};

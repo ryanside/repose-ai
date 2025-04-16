@@ -6,14 +6,15 @@ import ChatInput from "./chat-input";
 import { Message, useChat } from "@ai-sdk/react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { generateUUID } from "@/lib/utils";
-import YouTubeShorts from "@/app/(chat)/youtube-shorts";
 
 export default function LearnChat({
   id,
   initialMessages,
+  modeHandler,
 }: {
   id: string;
   initialMessages: Message[];
+  modeHandler?: (mode: "explore" | "learn") => void;
 }) {
   const lastMessageRef = useRef<HTMLDivElement>(null);
   const [currentLesson, setCurrentLesson] = useState<number>(1);
@@ -149,6 +150,7 @@ export default function LearnChat({
         input={input}
         handleInputChange={handleInputChange}
         mode="learn"
+        setMode={modeHandler}
       />
     );
   }

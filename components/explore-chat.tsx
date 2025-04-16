@@ -22,6 +22,7 @@ import { ResizableHandle } from "./ui/resizable";
 import { ResizablePanelGroup } from "./ui/resizable";
 import { ResizablePanel } from "./ui/resizable";
 
+// Layout function for organizing the graph nodes
 const getLayoutedElements = (
   nodes: CustomNode[],
   edges: CustomEdge[],
@@ -66,14 +67,22 @@ export type CustomEdge = Edge;
 export default function ExploreChat({
   id,
   initialMessages,
+  initialNodes = [],
+  initialEdges = [],
+  modeHandler,
 }: {
   id: string;
   initialMessages: Message[];
+  initialNodes?: CustomNode[];
+  initialEdges?: CustomEdge[];
+  modeHandler?: (mode: "explore" | "learn") => void;
 }) {
   const [mobileView, setMobileView] = useState<"chat" | "flow">("chat");
   const lastMessageRef = useRef<HTMLDivElement>(null);
-  const [nodes, setNodes, onNodesChange] = useNodesState<CustomNode>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<CustomEdge>([]);
+  const [nodes, setNodes, onNodesChange] =
+    useNodesState<CustomNode>(initialNodes);
+  const [edges, setEdges, onEdgesChange] =
+    useEdgesState<CustomEdge>(initialEdges);
   const { messages, input, handleInputChange, handleSubmit, append, setInput } =
     useChat({
       id,
@@ -160,8 +169,6 @@ export default function ExploreChat({
       // Combine all nodes and edges
       const newNodes = [rootNode, ...suggestionNodes];
       const newEdges = [...suggestionEdges];
-      console.log("newNodes", newNodes);
-      console.log("newEdges", newEdges);
 
       const layoutedElements = getLayoutedElements(newNodes, newEdges, {
         direction: "TB",
@@ -181,10 +188,11 @@ export default function ExploreChat({
   const submitUserMessage = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+      window.history.replaceState({}, "", `/explore/${id}`);
       handleSubmit(e);
       setTimeout(scrollToLastMessage, 50);
     },
-    [handleSubmit, scrollToLastMessage]
+    [handleSubmit, scrollToLastMessage, id]
   );
 
   const handleSuggestionClick = useCallback(
@@ -222,6 +230,8 @@ export default function ExploreChat({
         submitUserMessage={submitUserMessage}
         input={input}
         handleInputChange={handleInputChange}
+        mode="explore"
+        setMode={modeHandler}
       />
     );
   }
@@ -254,6 +264,7 @@ export default function ExploreChat({
                 submitUserMessage={submitUserMessage}
                 input={input}
                 handleInputChange={handleInputChange}
+                mode="explore"
               />
             </div>
           </ResizablePanel>
