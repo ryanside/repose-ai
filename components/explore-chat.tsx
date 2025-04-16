@@ -148,7 +148,7 @@ export default function ExploreChat({
       handleSubmit(e);
       setTimeout(scrollToLastMessage, 50);
     },
-    [handleSubmit, scrollToLastMessage]
+    [handleSubmit, scrollToLastMessage, id]
   );
 
   const handleSuggestionClick = useCallback(
