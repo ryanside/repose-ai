@@ -9,8 +9,8 @@ const outfit = Outfit({
 
 
 export const metadata: Metadata = {
-  title: "unnamed-ai-app",
-  description: "an unnamed ai app",
+  title: "Repose AI",
+  description: "a cool way to explore the web",
 };
 
 export default function RootLayout({

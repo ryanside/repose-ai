@@ -6,7 +6,7 @@ import {
 } from "ai";
 import { generateSuggestions } from "@/app/(chat)/actions";
 import { getMostRecentUserMessage, generateUUID } from "@/lib/utils";
-import { getChatById, saveChat, saveMessages } from "@/lib/db";
+import { getChatById, saveChat, saveMessages } from "@/lib/db/queries";
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
@@ -107,7 +107,7 @@ export async function POST(req: Request) {
                       })),
                     ],
                     fromSuggestionId: fromSuggestionId,
-                    annotations: { suggestions, fromSuggestionId },
+                    annotations: [{ suggestions, fromSuggestionId }],
                     createdAt: new Date(),
                   },
                 ],

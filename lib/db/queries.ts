@@ -40,12 +40,12 @@ export async function saveMessages({
 }
 
 export async function getMessagesByChatId({
-  chatId,
+  id,
 }: {
-  chatId: string;
+  id: string;
 }) {
   try {
-    return await db.select().from(messages).where(eq(messages.chatId, chatId)).orderBy(asc(messages.createdAt));
+    return await db.select().from(messages).where(eq(messages.chatId, id)).orderBy(asc(messages.createdAt));
   } catch (error) {
     console.error("Failed to get messages from database", error);
     throw error;
