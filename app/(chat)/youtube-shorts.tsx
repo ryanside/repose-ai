@@ -11,24 +11,125 @@ export default function YouTubeShorts({ topicQuery }: YouTubeShortsProps) {
   const [videoTitle, setVideoTitle] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasAttempted, setHasAttempted] = useState(false);
   const [searchQueryUsed, setSearchQueryUsed] = useState<string>("");
+  const [querySignature, setQuerySignature] = useState<string>("");
 
-  // API key from your example
-  const API_KEY = "AIzaSyCox-p0kSRp1-J0UpAFJKjYQ24SDZ9jR9I";
+  // Get API key from environment variable
+  const API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || "";
+
+  // Generate a unique signature for each query to detect changes
+  useEffect(() => {
+    const newSignature = topicQuery.trim().toLowerCase();
+    if (newSignature !== querySignature) {
+      setQuerySignature(newSignature);
+      setVideoId(null);
+      setVideoTitle("");
+      setSearchQueryUsed("");
+      setError(null);
+    }
+  }, [topicQuery, querySignature]);
 
   useEffect(() => {
-    // Skip if no topic or if we've already attempted for this topic
-    if (!topicQuery || hasAttempted) return;
+    // Skip if no topic, if we already have a video, or if API key is missing
+    if (!topicQuery || videoId || !API_KEY) {
+      if (!API_KEY && !error) {
+        setError(
+          "YouTube API key is missing. Please set NEXT_PUBLIC_YOUTUBE_API_KEY in your environment variables."
+        );
+      }
+      return;
+    }
 
     const searchForShorts = async () => {
-      // Simple direct search query for debugging
-      const exactSearchQuery = `${topicQuery} python print shorts`;
+      // Extract key learning concepts from the topic
+      let searchTerms = topicQuery.trim();
+
+      // Find programming language or technical topic mentions
+      const techKeywords = [
+        "python",
+        "javascript",
+        "java",
+        "c++",
+        "c#",
+        "ruby",
+        "php",
+        "typescript",
+        "html",
+        "css",
+        "sql",
+        "database",
+        "algorithm",
+        "react",
+        "angular",
+        "vue",
+        "node.js",
+        "express",
+        "django",
+        "flask",
+        "spring",
+        "programming",
+        "coding",
+        "development",
+      ];
+
+      // Find the first technical keyword mentioned
+      const foundTech = techKeywords.find((keyword) =>
+        topicQuery.toLowerCase().includes(keyword.toLowerCase())
+      );
+
+      // If we found a tech topic, let's make it more specific
+      if (foundTech) {
+        // Extract key concepts using some basic rules
+        const conceptPatterns = [
+          /(\w+)\s+function/i,
+          /(\w+)\s+loop/i,
+          /(\w+)\s+class/i,
+          /(\w+)\s+variable/i,
+          /(\w+)\s+method/i,
+          /(\w+)\s+statement/i,
+          /(\w+)\s+operator/i,
+          /(\w+)\s+array/i,
+          /(\w+)\s+object/i,
+          /(\w+)\s+syntax/i,
+        ];
+
+        for (const pattern of conceptPatterns) {
+          const match = topicQuery.match(pattern);
+          if (match && match[1]) {
+            searchTerms = `${match[1]} ${foundTech} tutorial shorts`;
+            break;
+          }
+        }
+
+        // If no specific concept was found, make a general query
+        if (searchTerms === topicQuery.trim()) {
+          // Check for code snippets by looking for code markers
+          if (
+            topicQuery.includes("```") ||
+            topicQuery.includes("print(") ||
+            topicQuery.includes("console.log") ||
+            topicQuery.includes("function ")
+          ) {
+            searchTerms = `${foundTech} code example shorts`;
+          } else {
+            searchTerms = `learn ${foundTech} basics shorts`;
+          }
+        }
+      } else {
+        // For non-technical topics, add "shorts" and "tutorial" or "explanation"
+        if (searchTerms.length > 50) {
+          // Extract first 3-5 words if topic is long
+          searchTerms = searchTerms.split(" ").slice(0, 5).join(" ");
+        }
+        searchTerms += " explanation shorts";
+      }
+
+      // Set our final search query
+      const exactSearchQuery = searchTerms;
       setSearchQueryUsed(exactSearchQuery);
 
       setIsLoading(true);
       setError(null);
-      setHasAttempted(true); // Mark that we've attempted for this topic
 
       try {
         console.log("Searching YouTube for:", exactSearchQuery);
@@ -66,15 +167,7 @@ export default function YouTubeShorts({ topicQuery }: YouTubeShortsProps) {
     };
 
     searchForShorts();
-  }, [topicQuery, hasAttempted]);
-
-  // Reset the attempt state when topic changes
-  useEffect(() => {
-    setHasAttempted(false);
-    setVideoId(null);
-    setVideoTitle("");
-    setSearchQueryUsed("");
-  }, [topicQuery]);
+  }, [topicQuery, videoId, querySignature]);
 
   if (isLoading) {
     return (
@@ -116,7 +209,11 @@ export default function YouTubeShorts({ topicQuery }: YouTubeShortsProps) {
           ></iframe>
         </div>
       </div>
-      <div className="w-full max-w-[350px] px-2"></div>
+      <div className="w-full max-w-[350px] px-2">
+        <p className="text-xs text-center text-muted-foreground mt-2 truncate">
+          {videoTitle || "Learning Video"}
+        </p>
+      </div>
     </div>
   );
 }

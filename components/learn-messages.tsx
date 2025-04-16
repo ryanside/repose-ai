@@ -62,6 +62,62 @@ function LearnMessages({
     [activeVideoMessages]
   );
 
+  // Generate a video query string from message content and code blocks
+  const generateVideoQuery = useCallback(
+    (message: Message, codeBlocks: any[]) => {
+      // Start with the main question from first user message
+      let baseQuery = messages[0].content || "";
+
+      // If we have code blocks, add the language and some keywords from code
+      if (codeBlocks.length > 0) {
+        const codeBlock = codeBlocks[0];
+        const language = codeBlock.language || "";
+
+        // Try to extract key concepts from the code
+        let codeKeywords = "";
+
+        if (codeBlock.code) {
+          // Extract main function names or variables
+          const functionMatches = codeBlock.code.match(/def\s+(\w+)/);
+          const classMatches = codeBlock.code.match(/class\s+(\w+)/);
+          const varMatches = codeBlock.code.match(/(\w+)\s*=/);
+
+          if (functionMatches && functionMatches[1]) {
+            codeKeywords += functionMatches[1] + " function ";
+          } else if (classMatches && classMatches[1]) {
+            codeKeywords += classMatches[1] + " class ";
+          } else if (varMatches && varMatches[1]) {
+            codeKeywords += varMatches[1] + " variable ";
+          }
+        }
+
+        // Add language info to the query
+        baseQuery = `${language} ${codeKeywords} ${baseQuery}`;
+      }
+
+      // For non-code messages, extract key concepts from message content
+      else if (message.role === "assistant" && message.content) {
+        // Look for headers in markdown content (usually topic indicators)
+        const headingMatches = message.content.match(/##\s+([^\n]+)/);
+        if (headingMatches && headingMatches[1]) {
+          baseQuery = headingMatches[1] + " " + baseQuery;
+        }
+
+        // Or grab the first sentence which often has the main concept
+        else {
+          const firstSentence = message.content.split(".")[0];
+          if (firstSentence && firstSentence.length < 100) {
+            baseQuery = firstSentence + " " + baseQuery;
+          }
+        }
+      }
+
+      // Generate a unique query ID for each message to ensure different videos
+      return `${baseQuery} lesson-${message.id.substring(0, 8)}`;
+    },
+    [messages]
+  );
+
   return (
     <div className="w-full max-w-3xl h-full mx-auto tracking-wide space-y-8 p-3 sm:p-4 pb-32">
       {messages.map((message, index) => {
@@ -86,6 +142,9 @@ function LearnMessages({
 
         const isVideoActive = activeVideoMessages.has(message.id);
         const showVideoButton = message.role === "assistant" && index > 0;
+
+        // Generate unique video query for this message
+        const videoQuery = generateVideoQuery(message, codeBlocks);
 
         return (
           <div
@@ -158,13 +217,7 @@ function LearnMessages({
                         }
                       }}
                     >
-                      <YouTubeShorts
-                        topicQuery={
-                          messages[0].content +
-                          " " +
-                          (codeBlocks.length > 0 ? codeBlocks[0].language : "")
-                        }
-                      />
+                      <YouTubeShorts topicQuery={videoQuery} />
                     </div>
                   )}
                 </div>

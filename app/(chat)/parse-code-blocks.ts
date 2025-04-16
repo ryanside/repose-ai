@@ -1,3 +1,4 @@
+// app/(chat)/parse-code-blocks.ts
 // Utility function to parse code blocks from AI responses
 export function parseCodeBlocksFromMessage(messageText: string) {
   // Array to store extracted code blocks
@@ -28,18 +29,24 @@ export function parseCodeBlocksFromMessage(messageText: string) {
     // Normalize language name
     language = languageMap[language] || language;
 
-    // Limit to 1-2 code blocks with simpler content
-    codeBlocks.push({
-      language,
-      code,
-    });
+    // Only collect actual code, not "Output:" placeholders
+    if (code.trim() !== "Output:") {
+      // Limit to 1-2 code blocks with simpler content
+      codeBlocks.push({
+        language,
+        code,
+      });
+    }
 
     // Only keep the first two code blocks
     if (codeBlocks.length >= 2) break;
   }
 
   // Generate a clean version of the message with code blocks removed
-  const cleanedMessage = messageText.replace(regex, "");
+  // and remove standalone "Output:" lines
+  const cleanedMessage = messageText
+    .replace(regex, "")
+    .replace(/\n\s*Output:\s*\n/g, "\n");
 
   return {
     codeBlocks,
