@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
+import Providers from "@/components/Providers";
 
 const outfit = Outfit({
   subsets: ["latin"],
 });
-
 
 export const metadata: Metadata = {
   title: "Repose AI",
@@ -20,17 +19,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${outfit.className} antialiased`}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+      <body className={`${outfit.className} antialiased`}>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

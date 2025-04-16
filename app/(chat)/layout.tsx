@@ -16,7 +16,7 @@ export default async function Layout({
   return (
     <>
       <SidebarProvider>
-        <AppSidebar />
+        <AppSidebar user={session?.user} />
         <SidebarInset className="outline outline-border">
           {children}
         </SidebarInset>

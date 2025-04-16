@@ -12,6 +12,9 @@ import { createSelectSchema, createInsertSchema } from "drizzle-zod";
 
 export const chats = pgTable("chats", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").notNull(),
   title: text("title").notNull(),
 });

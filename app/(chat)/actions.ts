@@ -1,5 +1,6 @@
 "use server";
 
+import { getChatsByUserId } from "@/lib/db/queries";
 import { generateUUID } from "@/lib/utils";
 import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
@@ -23,7 +24,7 @@ export async function generateSuggestions({
       `,
     prompt: messageContent,
     schema: z.array(z.string()),
-    temperature: 0.5,
+    temperature: 0.8,
   });
 
   const suggestions = result.map((suggestion) => ({
@@ -35,3 +36,12 @@ export async function generateSuggestions({
 
   return { suggestions };
 }
+
+export const getHistoryByUserId = async (userId: string) => {
+  if (!userId) {
+    return { error: "User ID is required" };
+  }
+
+  const history = await getChatsByUserId({ id: userId });
+  return history;
+};

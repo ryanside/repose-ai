@@ -1,7 +1,5 @@
-"use client"
-
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+"use client";
+import { useRouter } from "next/navigation";
 import {
   BadgeCheck,
   Bell,
@@ -10,13 +8,9 @@ import {
   LogOut,
   Sparkles,
   User,
-} from "lucide-react"
+} from "lucide-react";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,45 +19,41 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
-import { authClient } from "@/lib/auth-client"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/sidebar";
+import { authClient } from "@/lib/auth-client";
+import { Button } from "@/components/ui/button";
 
 interface User {
-  name: string
-  email: string
-  avatar: string
+  name: string;
+  email: string;
 }
 
-export function NavUser() {
-  const { isMobile, state } = useSidebar()
-  const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
-
+export function NavUser({ user }: { user: User | undefined }) {
+  const { isMobile, state } = useSidebar();
+  const router = useRouter();
 
   const handleLogout = async () => {
     try {
-      await authClient.signOut()
-      setUser(null)
-      router.push("/login")
+      await authClient.signOut();
+      router.push("/login");
     } catch (err) {
-      console.error("Error during logout:", err)
+      console.error("Error during logout:", err);
     }
-  }
+  };
 
   if (!user) {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
           <Button
-            variant="outline"
-            className="w-full"
+            variant="default"
+            className="w-full hover:text-sidebar-foreground"
             onClick={() => router.push("/login")}
           >
             <User className="h-4 w-4" />
@@ -71,7 +61,7 @@ export function NavUser() {
           </Button>
         </SidebarMenuItem>
       </SidebarMenu>
-    )
+    );
   }
 
   return (
@@ -82,11 +72,10 @@ export function NavUser() {
             <SidebarMenuButton
               size="lg"
               variant="outline"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="relative flex items-center gap-2 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 transition-colors"
             >
-              <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">
+              <Avatar className="h-8 w-8 rounded-lg border border-sidebar-accent/20 shadow-sm">
+                <AvatarFallback className="rounded-lg bg-sidebar-accent text-sidebar-accent-foreground font-medium">
                   {user.name.charAt(0)}
                 </AvatarFallback>
               </Avatar>
@@ -110,7 +99,6 @@ export function NavUser() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
                   <AvatarFallback className="rounded-lg">
                     {user.name.charAt(0)}
                   </AvatarFallback>
@@ -152,5 +140,5 @@ export function NavUser() {
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

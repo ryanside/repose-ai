@@ -7,7 +7,8 @@ import {
 import { generateSuggestions } from "@/app/(chat)/actions";
 import { getMostRecentUserMessage, generateUUID } from "@/lib/utils";
 import { getChatById, saveChat, saveMessages } from "@/lib/db/queries";
-// Allow streaming responses up to 30 seconds
+import { auth } from "@/lib/auth"; // path to your Better Auth server instance
+import { headers } from "next/headers"; // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
@@ -19,6 +20,15 @@ export async function POST(req: Request) {
       selectedChatModel = "gemini-2.0-flash-001",
     } = await req.json();
 
+    const session = await auth.api.getSession({
+      headers: await headers(), // you need to pass the headers object.
+    });
+
+    // Allow streaming even without session, but skip DB operations if no session
+    // if (!session || !session.user || !session.user.id) {
+    //   return new Response("Unauthorized", { status: 401 });
+    // }
+
     // last user message (which would be a role: user message)
     const userMessage = getMostRecentUserMessage(messages);
 
@@ -26,27 +36,30 @@ export async function POST(req: Request) {
       return new Response("No user message found", { status: 400 });
     }
 
-    // check if the chat exists
-    const chat = await getChatById({ id });
+    // Perform DB operations only if session exists
+    if (session?.user?.id) {
+      // check if the chat exists
+      const chat = await getChatById({ id });
 
-    // if the chat does not exist, create it
-    if (!chat) {
-      await saveChat({ id: id, title: userMessage.content });
+      // if the chat does not exist, create it
+      if (!chat) {
+        await saveChat({ id: id, userId: session.user.id, title: userMessage.content });
+      }
+
+      await saveMessages({
+        message: [
+          {
+            id: userMessage.id,
+            chatId: id,
+            role: "user",
+            parts: userMessage.parts,
+            fromSuggestionId: fromSuggestionId,
+            annotations: userMessage.annotations,
+            createdAt: new Date(),
+          },
+        ],
+      });
     }
-
-    await saveMessages({
-      message: [
-        {
-          id: userMessage.id,
-          chatId: id,
-          role: "user",
-          parts: userMessage.parts,
-          fromSuggestionId: fromSuggestionId,
-          annotations: userMessage.annotations,
-          createdAt: new Date(),
-        },
-      ],
-    });
 
     return createDataStreamResponse({
       execute: (dataStream) => {
@@ -67,10 +80,10 @@ export async function POST(req: Request) {
           maxSteps: 2,
           temperature: 0.8,
           onFinish: async ({ response, sources, text }) => {
-            // generate suggestions based onthe AI response text
+            // generate suggestions based on the AI response text
             const suggestions = await generateSuggestions({
               messageContent: text,
-              messageId: userMessage.id,
+              messageId: userMessage.id, // Use userMessage.id here, as it's always available
             });
             // write the suggestions to the data stream
             dataStream.writeMessageAnnotation({
@@ -78,42 +91,46 @@ export async function POST(req: Request) {
               fromSuggestionId,
             });
 
-            try {
-              // Appends the ResponseMessage[] from the response to a Message[] (for useChat). The messages are converted to Messages before being appended.
-              const [, assistantMessage] = appendResponseMessages({
-                messages: [userMessage],
-                responseMessages: response.messages,
-              });
+            // Only save assistant message if session exists
+            if (session?.user?.id) {
+              try {
+                // Appends the ResponseMessage[] from the response to a Message[] (for useChat). The messages are converted to Messages before being appended.
+                const [, assistantMessage] = appendResponseMessages({
+                  messages: [userMessage], // userMessage is available outside the session check
+                  responseMessages: response.messages,
+                });
 
-              // generate a new assistant message id
-              const newAssistantId = generateUUID();
+                // generate a new assistant message id
+                const newAssistantId = generateUUID();
 
-              // save the assistant message to the database (including the sources)
-              await saveMessages({
-                message: [
-                  {
-                    id: newAssistantId,
-                    chatId: id,
-                    role: "assistant",
-                    parts: [
-                      ...(assistantMessage.parts ?? []),
-                      ...(sources ?? []).map((source) => ({
-                        type: "source",
-                        source: {
-                          id: source.id,
-                          url: source.url,
-                          title: source.title,
-                        },
-                      })),
-                    ],
-                    fromSuggestionId: fromSuggestionId,
-                    annotations: [{ suggestions, fromSuggestionId }],
-                    createdAt: new Date(),
-                  },
-                ],
-              });
-            } catch (error) {
-              console.error("Error saving assistant message:", error);
+                // save the assistant message to the database (including the sources)
+                await saveMessages({
+                  message: [
+                    {
+                      id: newAssistantId,
+                      chatId: id, // id is available from request body
+                      role: "assistant",
+                      parts: [
+                        ...(assistantMessage.parts ?? []),
+                        ...(sources ?? []).map((source) => ({
+                          type: "source",
+                          source: {
+                            id: source.id,
+                            url: source.url,
+                            title: source.title,
+                          },
+                        })),
+                      ],
+                      fromSuggestionId: fromSuggestionId, // fromSuggestionId is available from request body
+                      annotations: [{ suggestions, fromSuggestionId }],
+                      createdAt: new Date(),
+                    },
+                  ],
+                });
+              } catch (error) {
+                console.error("Error saving assistant message:", error);
+                // Decide if you want to bubble up this error or just log it
+              }
             }
           },
         });
