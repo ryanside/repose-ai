@@ -10,8 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowUp } from "lucide-react";
-import { memo, useEffect } from "react";
-import { useAppContext } from "@/lib/app-context"; // Import the context
+import { memo } from "react";
 
 export default memo(ChatInput);
 
@@ -28,36 +27,13 @@ function ChatInput({
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   mode?: "explore" | "learn";
 }) {
-  // Use the app context to control the mode switcher visibility
-  const { setShowModeSwitcher } = useAppContext();
-
-  // Hide mode switcher when input is received or when submitting a message
-  useEffect(() => {
-    // If there's any input text or we have messages (not onboarding), hide the mode switcher
-    if (input.trim().length > 0 || !onboarding) {
-      setShowModeSwitcher(false);
+  // Handle Enter key press
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      const formEvent = e as unknown as React.FormEvent<HTMLFormElement>;
+      submitUserMessage(formEvent);
     }
-  }, [input, onboarding, setShowModeSwitcher]);
-
-  // Additional effect to hide mode switcher when focusing on input
-  const handleFocus = () => {
-    setShowModeSwitcher(false);
-  };
-
-  // Handle input change and hide mode switcher
-  const handleInputChangeWithHide = (
-    e: React.ChangeEvent<HTMLTextAreaElement>
-  ) => {
-    handleInputChange(e);
-    if (e.target.value.trim().length > 0) {
-      setShowModeSwitcher(false);
-    }
-  };
-
-  // Handle submit and hide mode switcher
-  const handleSubmitWithHide = (e: React.FormEvent<HTMLFormElement>) => {
-    setShowModeSwitcher(false);
-    submitUserMessage(e);
   };
 
   if (onboarding) {
@@ -72,23 +48,15 @@ function ChatInput({
             </h1>
           </div>
           <div className="w-full max-w-2xl px-2">
-            <form onSubmit={handleSubmitWithHide}>
+            <form onSubmit={submitUserMessage}>
               <div className="relative flex flex-col w-full gap-4">
                 <div className="flex flex-col">
                   <Textarea
                     value={input}
-                    onChange={handleInputChangeWithHide}
-                    onFocus={handleFocus}
+                    onChange={handleInputChange}
                     placeholder="Enter your topic to explore..."
                     className="min-h-[120px] sm:min-h-[150px] resize-none rounded-2xl px-4 py-3 shadow-sm font-medium tracking-wide"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSubmitWithHide(
-                          e as unknown as React.FormEvent<HTMLFormElement>
-                        );
-                      }
-                    }}
+                    onKeyDown={handleKeyDown}
                   />
                 </div>
                 <div className="absolute bottom-0 w-full flex justify-between items-center px-3 sm:px-4 pb-3">
@@ -138,7 +106,7 @@ function ChatInput({
         </div>
         <div className="w-full max-w-2xl px-2">
           <form
-            onSubmit={handleSubmitWithHide}
+            onSubmit={submitUserMessage}
             className="bg-accent/10 p-6 rounded-3xl border border-accent/20"
           >
             <div className="relative flex flex-col w-full gap-4">
@@ -152,18 +120,10 @@ function ChatInput({
                 <Textarea
                   id="learn-topic"
                   value={input}
-                  onChange={handleInputChangeWithHide}
-                  onFocus={handleFocus}
+                  onChange={handleInputChange}
                   placeholder="Try: Python basics, History of jazz, Climate science..."
                   className="min-h-[120px] sm:min-h-[150px] resize-none rounded-xl px-4 py-3 shadow-sm font-medium tracking-wide bg-background"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmitWithHide(
-                        e as unknown as React.FormEvent<HTMLFormElement>
-                      );
-                    }
-                  }}
+                  onKeyDown={handleKeyDown}
                 />
               </div>
               <Button
@@ -185,24 +145,16 @@ function ChatInput({
   if (mode === "explore") {
     return (
       <form
-        onSubmit={handleSubmitWithHide}
+        onSubmit={submitUserMessage}
         className="fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 rounded-2xl w-[95%] sm:w-full max-w-xl lg:max-w-3xl bg-background/30 backdrop-blur-sm z-50"
       >
         <div className="relative flex flex-col gap-4">
           <div className="flex flex-col">
             <Textarea
               value={input}
-              onChange={handleInputChangeWithHide}
-              onFocus={handleFocus}
+              onChange={handleInputChange}
               placeholder="Enter your topic..."
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmitWithHide(
-                    e as unknown as React.FormEvent<HTMLFormElement>
-                  );
-                }
-              }}
+              onKeyDown={handleKeyDown}
               className="min-h-[100px] resize-none rounded-2xl px-3 sm:px-4 py-3 shadow-sm font-medium tracking-wide"
             />
           </div>

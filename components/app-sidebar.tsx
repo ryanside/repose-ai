@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useRouter } from "next/navigation";
+import { useAppContext } from "@/lib/app-context";
+
 // This is sample data.
 const data = {
   user: {
@@ -158,16 +160,21 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
+  // Add this line to access the context
+  const { setShowModeSwitcher } = useAppContext();
+
+  // Create a handler function for the logo click
+  const handleLogoClick = () => {
+    // Show the mode switcher when clicking the logo to go back to home
+    setShowModeSwitcher(true);
+    router.push("/");
+    router.refresh();
+  };
+
   return (
     <Sidebar variant="inset" collapsible="icon" {...props}>
       <SidebarHeader>
-        <button
-          className="cursor-pointer"
-          onClick={() => {
-            router.push("/");
-            router.refresh();
-          }}
-        >
+        <button className="cursor-pointer" onClick={handleLogoClick}>
           <svg
             width="34"
             height="34"
