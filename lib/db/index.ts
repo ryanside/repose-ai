@@ -16,7 +16,7 @@ export async function saveChat({ id, title }: { id: string; title: string }) {
   }
 }
 
-export async function getChatsById({ id }: { id: string }) {
+export async function getChatById({ id }: { id: string }) {
   try {
     const [selectedChat] = await db.select().from(chats).where(eq(chats.id, id));
     return selectedChat;

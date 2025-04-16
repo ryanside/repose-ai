@@ -195,7 +195,7 @@ export default function ExploreChat({
           body: {
             fromSuggestionId,
           },
-        }
+        },
       );
       setInput(""); // Clear the main input field
       setTimeout(scrollToLastMessage, 50);

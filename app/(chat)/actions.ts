@@ -1,7 +1,8 @@
 "use server";
 
+import { generateUUID } from "@/lib/utils";
 import { google } from "@ai-sdk/google";
-import { generateId, generateObject } from "ai";
+import { generateObject } from "ai";
 import { z } from "zod";
 
 export async function generateSuggestions({
@@ -26,7 +27,7 @@ export async function generateSuggestions({
   });
 
   const suggestions = result.map((suggestion) => ({
-    id: generateId(),
+    id: generateUUID(),
     messageId: messageId,
     content: suggestion,
     selected: false,
