@@ -1,7 +1,7 @@
 "use client";
 
 import { Message } from "@ai-sdk/react";
-import { memo, useState, useRef, useCallback } from "react";
+import { memo, useState, useRef, useCallback, useEffect } from "react";
 import { ExternalLink, Link, Youtube } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -15,9 +15,11 @@ export default memo(LearnMessages);
 function LearnMessages({
   messages,
   lastMessageRef,
+  onVideoQuery,
 }: {
   messages: Message[];
   lastMessageRef: React.RefObject<HTMLDivElement | null>;
+  onVideoQuery?: (query: string) => void;
 }) {
   // Track which messages have videos showing
   const [activeVideoMessages, setActiveVideoMessages] = useState<Set<string>>(
@@ -29,13 +31,18 @@ function LearnMessages({
 
   // Updated toggleVideoDisplay function with improved scrolling
   const toggleVideoDisplay = useCallback(
-    (messageId: string) => {
+    (messageId: string, videoQuery: string) => {
       const newActiveVideoMessages = new Set(activeVideoMessages);
 
       if (newActiveVideoMessages.has(messageId)) {
         newActiveVideoMessages.delete(messageId);
       } else {
         newActiveVideoMessages.add(messageId);
+
+        // Call the onVideoQuery callback if provided
+        if (onVideoQuery) {
+          onVideoQuery(videoQuery);
+        }
 
         // Increase the delay to give more time for the video to render
         // and use a more gradual scrolling behavior
@@ -59,7 +66,7 @@ function LearnMessages({
 
       setActiveVideoMessages(newActiveVideoMessages);
     },
-    [activeVideoMessages]
+    [activeVideoMessages, onVideoQuery]
   );
 
   // Generate a video query string from message content and code blocks
@@ -194,7 +201,7 @@ function LearnMessages({
                   <Button
                     variant={isVideoActive ? "default" : "outline"}
                     className="gap-2"
-                    onClick={() => toggleVideoDisplay(message.id)}
+                    onClick={() => toggleVideoDisplay(message.id, videoQuery)}
                   >
                     <Youtube size={16} />
                     {isVideoActive

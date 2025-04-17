@@ -18,11 +18,13 @@ function ChatHeader({
   toggleView,
   mobileView = "chat",
   mode = "explore",
+  lessonCount,
 }: {
   firstMessageContent: string;
   toggleView?: () => void;
   mobileView?: "chat" | "flow";
   mode?: "explore" | "learn";
+  lessonCount?: number;
 }) {
   return (
     <header className="flex h-12 shrink-0 items-center gap-2 border-b justify-between px-4">
@@ -47,6 +49,11 @@ function ChatHeader({
                     {firstMessageContent.substring(0, 30)}
                     {firstMessageContent.length > 30 ? "..." : ""}
                   </span>
+                  {lessonCount && (
+                    <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                      Lesson {lessonCount}
+                    </span>
+                  )}
                 </>
               )}
             </BreadcrumbItem>

@@ -4,22 +4,43 @@ import LearnMessages from "./learn-messages";
 import ChatHeader from "./chat-header";
 import ChatInput from "./chat-input";
 import { Message, useChat } from "@ai-sdk/react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import { generateUUID } from "@/lib/utils";
+import { User } from "better-auth";
+import { useRouter } from "next/navigation";
 
 export default function LearnChat({
   id,
   initialMessages,
+  initialSession = null,
+  user,
   modeHandler,
 }: {
   id: string;
   initialMessages: Message[];
+  initialSession?: {
+    currentLesson: number;
+    lessonTopic: string;
+    lessonSequence: string[];
+    lastVideoQuery?: string;
+  } | null;
+  user?: User | null; // Updated to accept null
   modeHandler?: (mode: "explore" | "learn") => void;
 }) {
+  const router = useRouter();
   const lastMessageRef = useRef<HTMLDivElement>(null);
-  const [currentLesson, setCurrentLesson] = useState<number>(1);
-  const [lessonTopic, setLessonTopic] = useState<string>("");
-  const [lessonSequence, setLessonSequence] = useState<string[]>([]);
+  const [currentLesson, setCurrentLesson] = useState<number>(
+    initialSession?.currentLesson || 1
+  );
+  const [lessonTopic, setLessonTopic] = useState<string>(
+    initialSession?.lessonTopic || ""
+  );
+  const [lessonSequence, setLessonSequence] = useState<string[]>(
+    initialSession?.lessonSequence || []
+  );
+  const [lastVideoQuery, setLastVideoQuery] = useState<string | undefined>(
+    initialSession?.lastVideoQuery
+  );
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
 
   const { messages, input, handleInputChange, handleSubmit, append, setInput } =
@@ -29,6 +50,12 @@ export default function LearnChat({
       generateId: generateUUID,
       sendExtraMessageFields: true,
       api: "/api/learn",
+      body: {
+        lessonTopic,
+        currentLesson,
+        lessonSequence,
+        lastVideoQuery,
+      },
       onFinish: (message) => {
         // For learn mode, we update the lesson sequence
         let lessonContent = "";
@@ -51,6 +78,16 @@ export default function LearnChat({
         setIsGenerating(false);
       },
     });
+
+  // Update URL for authenticated users on first message
+  useEffect(() => {
+    if (user && messages.length > 0 && lessonTopic) {
+      // Only update URL if we're not already on a specific learn page
+      if (!window.location.pathname.includes("/learn/")) {
+        window.history.replaceState({}, "", `/learn/${id}`);
+      }
+    }
+  }, [messages.length, id, user, lessonTopic]);
 
   const scrollToLastMessage = useCallback(() => {
     lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -110,10 +147,20 @@ export default function LearnChat({
     setCurrentLesson(currentLesson + 1);
 
     // Make the API request
-    append({
-      role: "user",
-      content: nextLessonPrompt,
-    });
+    append(
+      {
+        role: "user",
+        content: nextLessonPrompt,
+      },
+      {
+        body: {
+          lessonTopic,
+          currentLesson: currentLesson + 1, // Send updated lesson count
+          lessonSequence,
+          lastVideoQuery,
+        },
+      }
+    );
 
     setInput(""); // Clear the input field
 
@@ -135,7 +182,13 @@ export default function LearnChat({
     append,
     setInput,
     scrollToLastMessage,
+    lastVideoQuery,
   ]);
+
+  // Handle video playback
+  const handleVideoQuery = useCallback((query: string) => {
+    setLastVideoQuery(query);
+  }, []);
 
   const firstMessageContent = useMemo(() => {
     return messages.length > 0 ? messages[0].content : "";
@@ -158,10 +211,18 @@ export default function LearnChat({
   // if the messages is not empty, show the chat
   return (
     <>
-      <ChatHeader firstMessageContent={firstMessageContent} mode="learn" />
+      <ChatHeader
+        firstMessageContent={firstMessageContent}
+        mode="learn"
+        lessonCount={currentLesson}
+      />
       <div className="flex flex-col flex-1 overflow-hidden">
         <div className="flex flex-col mx-auto h-full w-full overflow-y-auto relative">
-          <LearnMessages messages={messages} lastMessageRef={lastMessageRef} />
+          <LearnMessages
+            messages={messages}
+            lastMessageRef={lastMessageRef}
+            onVideoQuery={handleVideoQuery}
+          />
 
           {/* Fixed position for the input at the bottom - ABSOLUTE CENTER */}
           <div

@@ -3,7 +3,7 @@
 import { getChatsByUserId } from "@/lib/db/queries";
 import { generateUUID } from "@/lib/utils";
 import { google } from "@ai-sdk/google";
-import { generateObject, generateId } from "ai";
+import { generateObject } from "ai";
 import { z } from "zod";
 
 /**
@@ -42,12 +42,24 @@ export async function generateSuggestions({
 }
 
 /**
- * Gets the chat history for a user
+ * Gets the chat history for a user with optional mode filtering
  */
-export const getHistoryByUserId = async (userId: string) => {
+export async function getHistoryByUserId(
+  userId: string,
+  mode: "explore" | "learn" | "all" = "all"
+) {
   if (!userId) {
     return { error: "User ID is required" };
   }
-  const history = await getChatsByUserId({ id: userId });
-  return history;
-};
+
+  try {
+    const history = await getChatsByUserId({
+      id: userId,
+      mode: mode,
+    });
+    return history;
+  } catch (error) {
+    console.error("Error fetching chat history:", error);
+    return [];
+  }
+}

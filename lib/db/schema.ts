@@ -1,3 +1,4 @@
+// lib/db/schema.ts
 import { InferSelectModel, relations } from "drizzle-orm";
 import {
   pgTable,
@@ -7,6 +8,7 @@ import {
   json,
   varchar,
   boolean,
+  integer,
 } from "drizzle-orm/pg-core";
 import { createSelectSchema, createInsertSchema } from "drizzle-zod";
 
@@ -17,6 +19,7 @@ export const chats = pgTable("chats", {
     .references(() => user.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").notNull(),
   title: text("title").notNull(),
+  mode: varchar("mode", { length: 20 }).default("explore"), // Add mode field to differentiate between explore and learn
 });
 
 export const chatsInsertSchema = createInsertSchema(chats);
@@ -34,6 +37,26 @@ export const messages = pgTable("messages", {
   annotations: json("annotations"), // To store suggestions, fromSuggestionId, etc.
   createdAt: timestamp("created_at").notNull(),
 });
+
+// New table for learn-specific data
+export const learnSessions = pgTable("learn_sessions", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  chatId: uuid("chat_id")
+    .notNull()
+    .references(() => chats.id, { onDelete: "cascade" }),
+  currentLesson: integer("current_lesson").notNull().default(1),
+  lessonTopic: text("lesson_topic").notNull(),
+  lessonSequence: json("lesson_sequence").notNull(), // Array of lesson topics
+  lastVideoQuery: text("last_video_query"), // Last video query if any
+  updatedAt: timestamp("updated_at").notNull(),
+});
+
+export const learnSessionsRelations = relations(learnSessions, ({ one }) => ({
+  chat: one(chats, {
+    fields: [learnSessions.chatId],
+    references: [chats.id],
+  }),
+}));
 
 export const messagesInsertSchema = createInsertSchema(messages);
 export const messagesSelectSchema = createSelectSchema(messages);
