@@ -15,7 +15,7 @@ export default function YouTubeShorts({ topicQuery }: YouTubeShortsProps) {
   const [querySignature, setQuerySignature] = useState<string>("");
 
   // Get API key from environment variable
-  const API_KEY = process.env.YOUTUBE_API_KEY || "";
+  const API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || "";
 
   // Generate a unique signature for each query to detect changes
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function YouTubeShorts({ topicQuery }: YouTubeShortsProps) {
     if (!topicQuery || videoId || !API_KEY) {
       if (!API_KEY && !error) {
         setError(
-          "YouTube API key is missing. Please set YOUTUBE_API_KEY in your environment variables."
+          "YouTube API key is missing. Please set NEXT_PUBLIC_YOUTUBE_API_KEY in your environment variables."
         );
       }
       return;
