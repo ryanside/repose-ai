@@ -5,7 +5,7 @@ import { DBMessage } from "@/lib/db/schema";
 import { getLayoutedElements } from "@/lib/utils";
 import { UIMessage } from "ai";
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 // Define the expected structure for a text part locally if not exported
 interface TextPart {
@@ -126,6 +126,10 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     headers: await headers(), // you need to pass the headers object.
   });
 
+  if (!session?.user) {
+    redirect("/");
+  }
+
   const params = await props.params;
   const { id } = params;
   const chat = await getChatById({ id });
@@ -160,7 +164,6 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     <div className="flex flex-col h-full w-full overflow-hidden">
       <ExploreChat
         id={id}
-        user={session?.user}
         initialMessages={uiMessages}
         initialNodes={initialNodes}
         initialEdges={initialEdges}

@@ -138,7 +138,7 @@ export function SidebarHistory({ userId }: { userId: string | undefined }) {
   };
 
   return (
-    <SidebarMenu>
+    <SidebarMenu className="px-2">
       {Array.isArray(history) &&
         (() => {
           const groupedChats = groupChatsByDate(history);
@@ -147,7 +147,7 @@ export function SidebarHistory({ userId }: { userId: string | undefined }) {
             <>
               {groupedChats.today.length > 0 && (
                 <>
-                  <div className="px-2 py-1 text-xs text-sidebar-foreground/50">
+                  <div className="py-1 text-xs text-sidebar-foreground/50">
                     Today
                   </div>
                   {groupedChats.today.map((chat) => (
@@ -177,7 +177,7 @@ export function SidebarHistory({ userId }: { userId: string | undefined }) {
 
               {groupedChats.lastWeek.length > 0 && (
                 <>
-                  <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
+                  <div className="py-1 text-xs text-sidebar-foreground/50 mt-6">
                     Last 7 days
                   </div>
                   {groupedChats.lastWeek.map((chat) => (
@@ -192,7 +192,7 @@ export function SidebarHistory({ userId }: { userId: string | undefined }) {
 
               {groupedChats.lastMonth.length > 0 && (
                 <>
-                  <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
+                  <div className="py-1 text-xs text-sidebar-foreground/50 mt-6">
                     Last 30 days
                   </div>
                   {groupedChats.lastMonth.map((chat) => (
@@ -207,7 +207,7 @@ export function SidebarHistory({ userId }: { userId: string | undefined }) {
 
               {groupedChats.older.length > 0 && (
                 <>
-                  <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
+                  <div className="py-1 text-xs text-sidebar-foreground/50 mt-6">
                     Older
                   </div>
                   {groupedChats.older.map((chat) => (

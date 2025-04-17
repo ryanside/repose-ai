@@ -20,7 +20,6 @@ import "@xyflow/react/dist/style.css";
 import { ResizableHandle } from "./ui/resizable";
 import { ResizablePanelGroup } from "./ui/resizable";
 import { ResizablePanel } from "./ui/resizable";
-import { User } from "better-auth";
 
 export type CustomNode = Node<{ label: string }>;
 export type CustomEdge = Edge;
@@ -30,13 +29,11 @@ export default function ExploreChat({
   initialMessages,
   initialNodes,
   initialEdges,
-  user,
 }: {
   id: string;
   initialMessages: Message[];
   initialNodes: CustomNode[];
   initialEdges: CustomEdge[];
-  user: User | undefined;
 }) {
   const [mobileView, setMobileView] = useState<"chat" | "flow">("chat");
   const lastMessageRef = useRef<HTMLDivElement>(null);
@@ -149,13 +146,11 @@ export default function ExploreChat({
   const submitUserMessage = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      if (user && messages.length === 0) {
-        window.history.replaceState({}, "", `/explore/${id}`);
-      }
+      window.history.replaceState({}, "", `/explore/${id}`);
       handleSubmit(e);
       setTimeout(scrollToLastMessage, 50);
     },
-    [handleSubmit, scrollToLastMessage, id, messages.length, user]
+    [handleSubmit, scrollToLastMessage, id]
   );
 
   const handleSuggestionClick = useCallback(

@@ -41,7 +41,8 @@ export function NavUser({ user }: { user: User | undefined }) {
   const handleLogout = async () => {
     try {
       await authClient.signOut();
-      router.push("/login");
+      router.push("/");
+      router.refresh();
     } catch (err) {
       console.error("Error during logout:", err);
     }
