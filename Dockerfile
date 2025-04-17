@@ -5,14 +5,14 @@ FROM node:20-alpine AS base
 WORKDIR /app
 
 # Install dependencies
-# Copy package.json and package-lock.json (if available)
 COPY package.json package-lock.json* ./
-
-# Install project dependencies
 RUN npm install
 
 # Copy the rest of the application code
 COPY . .
+
+# Make docker-entrypoint.js executable
+RUN chmod +x docker-entrypoint.js
 
 # Build the application
 RUN npm run build
@@ -20,5 +20,9 @@ RUN npm run build
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"]
+# Environment variable for port
+ENV PORT=3000
+ENV NODE_ENV=production
+
+# Start the application using the entry point script
+CMD ["./docker-entrypoint.js", "npm", "start"]
